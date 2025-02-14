@@ -6,10 +6,6 @@ import type { UserInfo } from "@/types/User";
 import { Link } from "next-view-transitions";
 import type { ReactNode } from "react";
 import { BiLogInCircle } from "react-icons/bi";
-import { supabase } from "@/utils/Database/supabase";
-import rotateUrl from "@/utils/URL";
-import { cookies } from "next/headers";
-import { token } from "@/utils/Tokenize";
 
 export default async function RootLayout({
 	children,
