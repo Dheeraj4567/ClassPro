@@ -193,6 +193,7 @@ export function Sidebar({
       <div id='dialog-root' />
     </>
   );
+  
 }
 
 // const GradeXIcon = ({
