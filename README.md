@@ -1,35 +1,30 @@
 ![alt text](/public/images/og.png)
 
+
 # ClassPro
 ## Better way to manage your academics.
 View, predict, and strategize your success.
 
 ---
 
-> [!WARNING]
-> This is the v3 branch for ClassPro
-> 
-> This branch is an architectural change moving from CSR to PPR (Partial Prerendering) and SSR (Server side rendering) techniques to make it faster, vigiliant and reliable.
+> [!TIP]
+> ClassPro is now self-hostable! You can run your very own ClassPro instance.
+> - `NEXT_PUBLIC_URL` is the [backend](https://github.com/rahuletto/goscraper) that you have to deploy it by yourself and link it
+> - `NEXT_PUBLIC_VALIDATION_KEY` should be an unique key that should match with the backend server.. This key is used to validate if the requests are authentic and from desired frontend
+> - `NEXT_PUBLIC_SERVICE_KEY` and `NEXT_PUBLIC_SUPABASE_URL` should be your supabase SERVICE key and ANON key.
 >
-> We had to
-> - Rewrite entire frontend codebase
-> - Rewrite backend to Golang with fiber
-> - Change architectures and logics
-> - Change how we display data
-> - Using alot of portals to display
->
-> This results in
-> - `Best Performance`: We don't cache your data anymore, Everything's loaded and updated parallel with `goroutines`
-> - `Server sided madness`: Nearly everything is rendered on server sided and caches the components, resulting in faster loading speeds
-> - `Reduced junk`: We reduced nearly 60% of Nodes, so less components -> less bundle size -> faster speeds
-> - `Custom Themes`: Rebuilt entire theme engine from scratch to support custom themes. Open a PR to add themes 😃
-> - `Search algorithms`: We added fuzzy search to our links and added Faculties search
-> - `Much accurate faculty results`: We had to scrape the names of staffs, now results in nearly ~93% accuracy in url results in course page
-> - `Customizable timetable`: Added a way to toggle optional hours in timetable.
-> - `Cleaner Calendar and Timetable`: It was filled with alot of Element Nodes, now its the same UI with 60% fewer Elements.
-> - `Reimagined Attendance Predict`: Redrew everything from scratch to have an efficient, quicker and accurate prediction algorithm.
-> - `Smart detection`: It identifies if session is invalid, ratelimits users and more
+> Host it, get the url, use it and enjoy! 
 
+### `.env`
+```
+NEXT_PUBLIC_URL=""
+NEXT_PUBLIC_VALIDATION_KEY=""
+NEXT_PUBLIC_SERVICE_KEY=""
+NEXT_PUBLIC_SUPABASE_URL=""
+```
+
+> [!WARNING]
+> We will **NOT** take account for anything caused by your self-hosted instance
 
 ## Why Choose ClassPro?
 
