@@ -46,14 +46,8 @@ async function fetchData(): Promise<AllResponse> {
 		let json: AllResponse;
 		try {
 			const text = await response.text();
-			if (text.trim().startsWith('<!DOCTYPE')) {
-				redirect('/suspended');
-			}
 			json = JSON.parse(text);
 		} catch (e) {
-			if (e instanceof SyntaxError && e.message.includes('Unexpected token')) {
-				redirect('/suspended');
-			}
 			throw e;
 		}
 

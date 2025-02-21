@@ -7,5 +7,5 @@ export default async function Docupro() {
 	const { courses } = await fetchUserData();
 
 	const files = await fetchFileArray();
-	return <Library courses={courses.courses} files={files} />;
+	return <Library courses={courses.courses} files={files as any} />;
 }

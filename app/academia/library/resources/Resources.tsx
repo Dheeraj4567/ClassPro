@@ -41,7 +41,7 @@ export default function Resources({ folders }: ResourcesProps) {
 
   const handleFileClick = (rawUrl: string, url: string) => {
     const decodedUrl = decodeURIComponent(rawUrl);
-    window.open(`https://docs.google.com/gview?url=https://class-pro.vercel.app/academia/library/render?id=${decodedUrl}`, "_blank");
+    window.open(`https://docs.google.com/gview?url=${window.location.origin}/academia/library/render?id=${decodedUrl}`, "_blank");
   };
 
   const renderItem = (item: Folder | Children, level: number = 0) => {

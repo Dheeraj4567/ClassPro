@@ -4,5 +4,5 @@ import { fetchResourcesArray } from "@/hooks/fetchResources";
 
 export default async function Docupro() {
 	const folders = await fetchResourcesArray();
-	return <Resources folders={folders} />;
+	return <Resources folders={folders as any} />;
 }
