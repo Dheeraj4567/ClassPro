@@ -2,13 +2,16 @@ import React from "react";
 import type { Overall } from "@/types/Marks";
 
 import { MarkDisplay } from "./MarkElement";
+import { FaCalculator } from "react-icons/fa";
 
 interface TotalProps {
 	overall?: Overall;
 	graph?: boolean;
+	calculate?: boolean;
+	setCalculate?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function TotalSection({ overall, graph }: TotalProps) {
+export default function TotalSection({ overall, graph, calculate, setCalculate }: TotalProps) {
 	if (!overall) {
 		const percent = "0.00";
 		return (
@@ -65,7 +68,23 @@ export default function TotalSection({ overall, graph }: TotalProps) {
 						</div>
 					)}
 				</div>
-				<MarkDisplay marks={overall} />
+				<div className="flex items-center gap-2">
+					{setCalculate && (
+						<button
+							onClick={() => setCalculate(!calculate)}
+							className={`flex items-center justify-center p-2 rounded-full shadow-md ${
+								calculate
+									? "bg-light-error-color text-light-background-light dark:bg-dark-error-color dark:text-dark-background-light"
+									: "bg-light-background-light text-light-accent dark:bg-dark-background-light dark:text-dark-accent"
+							}`}
+						>
+							<span className="flex items-center justify-center">
+									{calculate ? "×" : <FaCalculator size={12} />}
+							</span>
+						</button>
+					)}
+					<MarkDisplay marks={overall} />
+				</div>
 			</div>
 		</div>
 	);
