@@ -7,24 +7,21 @@ import MarkList from "./MarkList";
 import dynamic from "next/dynamic";
 import type { Course } from "@/types/Course";
 // import PerformanceChart from "./PerfGraph";
-import Indicator from "@/components/Indicator";
 
-const CalculatorSection = dynamic(
-	() => import("./Calculate").then((a) => a.default),
+const Indicator = dynamic(
+	() => import("@/components/Indicator").then((a) => a.default),
 	{ ssr: false },
 );
 
 export default function MarkCard({
 	mark,
 	course,
-	graph = false,
+	// graph = false,
 }: {
 	mark: Mark | undefined;
 	course: Course;
-	graph?: boolean;
+	// graph: boolean;
 }) {
-	const [calculate, setCalculate] = useState(false);
-	
 	// if (!mark) return null;
 	return (
 		<div className={"relative flex flex-col items-center"}>
@@ -32,7 +29,7 @@ export default function MarkCard({
 				title={`${course.title} (${course.code})`}
 				className={`relative flex h-full min-h-[195px] w-full flex-col ${course?.credit === "0" ? "border-x-2 border-light-background-light dark:border-dark-background-light" : "border-transparent"} justify-between gap-3 rounded-3xl border bg-light-background-normal p-4 px-5 pb-5 dark:bg-dark-background-normal`}
 			>
-				<div className={`${calculate ? "opacity-50" : "opacity-100"} flex h-full flex-col gap-4`}>
+				<div className={"flex h-full flex-col gap-4"}>
 					<div className="flex w-full items-start justify-between gap-2">
 						<h1
 							title={course.code}
@@ -53,12 +50,9 @@ export default function MarkCard({
 				</div>
 
 				<TotalSection
-					graph={graph}
+					// graph={graph}
 					overall={mark?.overall}
-					calculate={calculate}
-					setCalculate={setCalculate}
 				/>
-				{calculate && mark?.overall && <CalculatorSection overall={mark.overall} />}
 			</div>
 			{course?.credit === "0" && (
 				<div className="absolute -bottom-3 z-10 mx-auto my-0.5 w-fit rounded-full border border-light-background-light bg-light-background-dark px-3 py-0.5 dark:border-dark-background-light dark:bg-dark-background-light">

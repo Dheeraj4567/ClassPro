@@ -1,4 +1,4 @@
-export const grade_points: { [key: string]: number } = {
+export const gradePoints: { [key: string]: number } = {
 	// biome-ignore lint/style/useNamingConvention: <explanation>
 	O: 91,
 	"A+": 81,
@@ -10,9 +10,6 @@ export const grade_points: { [key: string]: number } = {
 	// biome-ignore lint/style/useNamingConvention: <explanation>
 	C: 50,
 };
-
-// For compatibility with existing code
-export const gradePoints = grade_points;
 
 export function getGrade(marks: number): string {
 	if (marks >= 91) return "O";
