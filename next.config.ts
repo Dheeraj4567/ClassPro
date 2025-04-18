@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
+import path from "path";
 
 const withSerwist = withSerwistInit({
 	swSrc: "app/sw.ts",
@@ -22,12 +23,15 @@ const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	compress: true,
 	eslint: { ignoreDuringBuilds: true },
+	webpack(config) {
+    config.resolve.alias['@radix-ui/react-use-effect-event'] =
+      path.resolve(__dirname, 'stubs/use-effect-event.js');
+    return config;
+  },
 	experimental: {
 		reactCompiler: true,
-		// parallelServerCompiles: true,
 		nextScriptWorkers: true,
 		viewTransition: true,
-		// useLightningcss: true,
 	},
 };
 export default withSerwist(nextConfig);

@@ -29,6 +29,6 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"eslint.config.mjs"
-	],
+, "stubs/use-effect-event.js"	],
 	"exclude": ["node_modules", "public/sw.js"]
 }
