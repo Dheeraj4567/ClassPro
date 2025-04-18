@@ -76,14 +76,3 @@
   from = "/*"
   to = "/.netlify/functions/next"
   status = 200
-
-# Override ReactEffectEvent imports for Netlify
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# Use a custom build step to downgrade Radix UI packages to versions that don't rely on useEffectEvent
-[[plugins]]
-  package = "netlify-plugin-inline-functions-env"
-  
-  [plugins.inputs]
-  buildCommand = "bun install @radix-ui/react-slider@1.1.2 @radix-ui/react-popover@1.0.7 @radix-ui/react-scroll-area@1.0.5 --force && bun run build"
