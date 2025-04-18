@@ -32,7 +32,7 @@ export default function TotalSection({ overall, graph }: TotalProps) {
 					</div>
 					<MarkDisplay
 						marks={{
-							marks: "0.00",
+							scored: "0.00",
 							total: "0",
 						}}
 					/>
@@ -42,7 +42,7 @@ export default function TotalSection({ overall, graph }: TotalProps) {
 	}
 
 	const percent = (
-		(Number.parseFloat(overall.marks ?? "0") / Number.parseFloat(overall.total ?? "1")) *
+		(Number.parseFloat(overall.scored ?? "0") / Number.parseFloat(overall.total ?? "1")) *
 		100
 	).toFixed(1);
 
