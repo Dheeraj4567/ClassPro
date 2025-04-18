@@ -15,7 +15,7 @@ export interface Mark {
 }
 
 export interface Overall {
-	marks?: string;
+	scored?: string;
 	total: string;
 }
 

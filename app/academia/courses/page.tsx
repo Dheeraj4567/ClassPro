@@ -3,7 +3,6 @@ import React, { Suspense } from "react";
 import CourseCard from "./components/Card";
 import Indicator from "@/components/Indicator";
 import Loading from "@/components/States/Loading";
-import { supabase } from "@/utils/Database/supabase";
 
 export default async function Courses() {
 	const json = await fetchUserData();
