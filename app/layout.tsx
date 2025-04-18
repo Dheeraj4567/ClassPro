@@ -98,10 +98,6 @@ export default async function RootLayout({
 				lang="en"
 				className={`dark h-screen bg-light-background-normal dark:bg-dark-background-normal ${GeistSans.variable} ${GeistMono.variable}`}
 			>
-				<Script
-				id="razorpay-checkout-js"
-				src="https://checkout.razorpay.com/v1/checkout.js"
-			/>
 				<ErrorBoundary>
 					<ThemeProvider>
 						<meta name="apple-mobile-web-app-title" content="ClassPro" />

@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
 		reactCompiler: true,
 		// parallelServerCompiles: true,
 		nextScriptWorkers: true,
+		viewTransition: true,
 		// useLightningcss: true,
 	},
 };
