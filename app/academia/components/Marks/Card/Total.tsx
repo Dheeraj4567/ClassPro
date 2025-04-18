@@ -1,10 +1,10 @@
 import React from "react";
-import type { Overall } from "@/types/Marks";
+import type { Marks } from "@/types/Marks";
 
 import { MarkDisplay } from "./MarkElement";
 
 interface TotalProps {
-	overall?: Overall;
+	overall?: Marks;
 	graph?: boolean;
 }
 

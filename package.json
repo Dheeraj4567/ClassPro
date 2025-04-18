@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@builder.io/partytown": "^0.10.3",
     "@dotmind/react-use-pwa": "^1.0.4",
     "@radix-ui/react-popover": "^1.1.5",
     "@radix-ui/react-scroll-area": "^1.2.2",

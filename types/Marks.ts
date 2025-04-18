@@ -10,13 +10,8 @@ export interface Mark {
 	courseName: string;
 	courseCode: string;
 	courseType: string;
-	overall: Overall;
+	overall: Marks;
 	testPerformance: TestPerformance[];
-}
-
-export interface Overall {
-	scored?: string;
-	total: string;
 }
 
 export interface TestPerformance {

@@ -1,11 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, memo } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Mark } from "@/types/Marks";
 import Medal from "./Medals";
 import { getGrade } from "@/types/Grade";
 import { Course } from "@/types/Course";
 import { MarkDisplay } from "../../components/Marks/Card/MarkElement";
+import { determineGrade, gradePoints as sgpaGradePoints } from "./GradeCalculator";
 
+// Grade point values for scoring calculation - moved outside component to prevent recreation
+export const grade_points: { [key: string]: number } = {
+    O: 91,
+    "A+": 81,
+    A: 71,
+    "B+": 61,
+    B: 56,
+    C: 50,
+};
 
 export const medalStyles = {
     O: {
@@ -53,7 +63,8 @@ const gradeMap: { [key: number]: string } = {
     5: "O",
 };
 
-export default function GradeCard({
+// Memoized component to prevent unnecessary re-renders
+const GradeCard = memo(function GradeCard({
     mark,
     currentGrade,
     updateGrade,
@@ -67,40 +78,57 @@ export default function GradeCard({
     courses: Course[]
 }) {
     const [editMode, setEditMode] = useState(false);
-    const courseDetails = courses?.find((a) => a.code === mark.courseCode);
-
-    const [requiredMarks, setRequiredMarks] = useState("0");
     const [expectedInternal, setExpectedInternal] = useState(0);
+    const [requiredMarks, setRequiredMarks] = useState("0");
 
-    // Calculate required marks whenever the selected grade or marks change
-    useEffect(() => {
-        setRequiredMarks(
-            (
-                ((grade_points[currentGrade] -
-                    (Number(mark.overall.total) + expectedInternal)) /
-                    40) *
-                75
-            ).toFixed(2),
-        );
-    }, [currentGrade, expectedInternal, mark.overall.total, mark.courseType]);
+    // Find course details once using useMemo to prevent recalculation on each render
+    const courseDetails = useMemo(() => 
+        courses?.find((a) => a.code === mark.courseCode),
+        [courses, mark.courseCode]
+    );
 
+    // Calculate required marks whenever relevant data changes
     useEffect(() => {
-        const lostMark: number =
-            Number(mark.overall.total) - Number(mark.overall.total);
-        const calculatedGrade =
-            Number(mark.overall.total) == 100
-                ? getGrade(Number(mark.overall.total))
-                : determineGrade(lostMark);
+        if (!mark || !currentGrade) return;
+
+        // Prevent NaN calculations
+        const totalMarks = Number(mark.overall.total) || 100;
+        const scoredMarks = Number(mark.overall.scored) || 0;
+        const gradePointThreshold = grade_points[currentGrade] || 0;
+        
+        // Calculate required marks based on course type
+        const calculatedMarks = mark.courseType === "Practical" 
+            ? gradePointThreshold - (totalMarks + expectedInternal)
+            : ((gradePointThreshold - (totalMarks + expectedInternal)) / 40) * 75;
+
+        // Format and set required marks, preventing NaN
+        setRequiredMarks(isNaN(calculatedMarks) ? "0" : calculatedMarks.toFixed(2));
+    }, [currentGrade, expectedInternal, mark]);
+
+    // Set initial grade on component mount
+    useEffect(() => {
+        if (!mark) return;
+        
+        const scoredMarks = Number(mark.overall.scored) || 0;
+        const totalMarks = Number(mark.overall.total) || 100;
+        
+        const calculatedGrade = 
+            totalMarks === 100
+                ? getGrade(scoredMarks)
+                : determineGrade(scoredMarks, totalMarks);
+                
         updateGrade(mark.courseCode, calculatedGrade);
+    }, [mark, updateGrade]);
 
-    }, [mark.overall.total, mark.overall.total, mark.courseCode]);
-
+    // Get slider value based on current grade
     const getSliderValue = (grade: string) => {
-        return Object.entries(gradeMap).find(([_, g]) => g === grade)?.[0] || "5";
+        const entry = Object.entries(gradeMap).find(([_, g]) => g === grade);
+        return entry ? entry[0] : "5";
     };
 
+    // Handle slider change with vibration feedback
     const handleSliderChange = (value: number[]) => {
-        if (navigator.vibrate) {
+        if (navigator.vibrate && typeof navigator.vibrate === 'function') {
             navigator.vibrate(40);
         }
 
@@ -108,6 +136,7 @@ export default function GradeCard({
         updateGrade(mark.courseCode, newGrade);
     };
 
+    // Toggle course exclusion
     const handleExcludeToggle = () => {
         updateGrade(mark.courseCode, currentGrade, true);
     };
@@ -183,30 +212,16 @@ export default function GradeCard({
                             </h2>
                             <div className="flex items-center gap-1 rounded-full bg-light-background-dark dark:bg-dark-background-dark">
                                 <span
-                                    className={`pl-2 text-sm font-medium ${Number(
-                                        mark.courseType === "Practical"
-                                            ? grade_points[currentGrade] -
-                                            (Number(mark.overall.total) + expectedInternal)
-                                            : requiredMarks,
-                                    ) <= 0
+                                    className={`pl-2 text-sm font-medium ${
+                                        // For display purposes, we use the already formatted requiredMarks state
+                                        Number(requiredMarks) <= 0
                                             ? "text-light-accent dark:text-dark-accent"
-                                            : Number(
-                                                mark.courseType === "Practical"
-                                                    ? grade_points[currentGrade] -
-                                                    (Number(mark.overall.total) +
-                                                        expectedInternal)
-                                                    : requiredMarks,
-                                            ) > (mark.courseType === "Practical" ? 40 : 75)
+                                            : Number(requiredMarks) > (mark.courseType === "Practical" ? 40 : 75)
                                                 ? "text-light-error-color dark:text-dark-error-color"
                                                 : "text-light-success-color dark:text-dark-success-color"
-                                        }`}
+                                    }`}
                                 >
-                                    {mark.courseType === "Practical"
-                                        ? (
-                                            grade_points[currentGrade] -
-                                            (Number(mark.overall.total) + expectedInternal)
-                                        ).toFixed(2)
-                                        : requiredMarks}
+                                    {requiredMarks}
                                 </span>
                                 <span className="ml-1 rounded-full bg-light-success-color px-2 py-0.5 pr-2 text-sm font-bold text-light-success-background dark:bg-dark-success-color dark:text-dark-success-background">
                                     {mark.courseType === "Practical" ? 40 : 75}
@@ -240,9 +255,10 @@ export default function GradeCard({
                             setEdit={setEditMode}
                             grade={
                                 (Number(mark.overall.total) == 100
-                                    ? getGrade(Number(mark.overall.total))
+                                    ? getGrade(Number(mark.overall.scored))
                                     : determineGrade(
-                                        Number(mark.overall.total) - Number(mark.overall.total),
+                                        Number(mark.overall.scored),
+                                        Number(mark.overall.total),
                                     )) as "O" | "A+" | "A" | "B+" | "B" | "C"
                             }
                         />
@@ -274,21 +290,6 @@ export default function GradeCard({
             </div>
         </div>
     );
-}
+});
 
-function determineGrade(lostMark: number): string {
-    if (lostMark >= 36) return "B";
-    if (lostMark >= 27) return "B+";
-    if (lostMark >= 18) return "A";
-    if (lostMark >= 9) return "A+";
-    if (lostMark >= 0) return "O";
-    return "C";
-}
-export const grade_points: { [key: string]: number } = {
-    O: 91,
-    "A+": 81,
-    A: 71,
-    "B+": 61,
-    B: 56,
-    C: 50,
-};
+export default GradeCard;

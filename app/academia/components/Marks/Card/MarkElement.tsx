@@ -1,4 +1,4 @@
-import type { Marks, Overall, TestPerformance } from "@/types/Marks";
+import type { Marks, TestPerformance } from "@/types/Marks";
 import React from "react";
 
 export default function MarkElement({ test }: { test: TestPerformance }) {
@@ -10,7 +10,7 @@ export default function MarkElement({ test }: { test: TestPerformance }) {
 	);
 }
 
-export function MarkDisplay({ marks }: { marks: Marks & Overall }) {
+export function MarkDisplay({ marks }: { marks: Marks }) {
 	const scored = marks.scored
 	return (
 		<div

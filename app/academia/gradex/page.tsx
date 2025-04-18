@@ -7,7 +7,6 @@ export default async function GradeX() {
     const marks = json.marks?.marks
     const courses = json.courses?.courses
 
-
     return <div className="flex flex-col gap-12 h-screen px-3 py-2">
         <GradeCalculator marks={marks} courses={courses} />
     </div>;

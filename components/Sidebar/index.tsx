@@ -129,8 +129,7 @@ export function Sidebar({
           <hr className='border-t-light-side dark:border-t-dark-side' />
           <Link
               onClick={handleClick}
-              href='https://gradex.vercel.app/'
-              target='_blank'
+              href='/academia/gradex'
             >
             <BsCalculatorFill className='text-xl' />
               GradeX
