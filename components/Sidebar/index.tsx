@@ -29,6 +29,7 @@ const OpenButton = dynamic(
 );
 import ThemeToggle from '@/components/themes/ThemeToggle';
 import { IoLibrarySharp } from 'react-icons/io5';
+import { BsCalculatorFill } from 'react-icons/bs';
 // import GradeXIcon from '@/public/images/GradeX';
 
 export function Sidebar({
@@ -126,14 +127,14 @@ export function Sidebar({
           </div>
 
           <hr className='border-t-light-side dark:border-t-dark-side' />
-          {/* <Link
+          <Link
               onClick={handleClick}
               href='https://gradex.vercel.app/'
               target='_blank'
             >
-              <GradeXIcon className='text-xl' />
+            <BsCalculatorFill className='text-xl' />
               GradeX
-            </Link> */}
+            </Link>
           <Link title="Question papers" href="/academia/library">
             <IoLibrarySharp className="text-xl" />
             <span className="flex items-center justify-start gap-3 text-light-color dark:text-dark-color">
