@@ -95,17 +95,19 @@ const GradeCard = memo(function GradeCard({
     useEffect(() => {
         if (!mark || !currentGrade) return;
         
+        const total_internal_score = Number(mark.overall.scored) + expectedInternal;
+        const isPractical = mark.courseType === "Practical";
+        const maxExternalMarks = isPractical ? 40 : 75;
+
         const calculatedRequiredMarks = (
-            ((grade_points[currentGrade] -
-                (Number(mark.overall.scored) + expectedInternal)) /
-                40) *
-            75
+            ((grade_points[currentGrade] - total_internal_score) / 40) * 
+            maxExternalMarks // Use the correctly determined max marks here
         );
 
         setRequiredMarks(calculatedRequiredMarks.toFixed(2));
 
-        const maxPossibleExternal = mark.courseType === "Practical" ? 40 : 75;
-        if (calculatedRequiredMarks > maxPossibleExternal) {
+        // Check against the correct maximum for this course type
+        if (calculatedRequiredMarks > maxExternalMarks) { 
             const currentSliderValue = parseInt(getSliderValue(currentGrade));
             if (currentSliderValue > 0) { 
                 const nextLowerGrade = gradeMap[currentSliderValue - 1];
