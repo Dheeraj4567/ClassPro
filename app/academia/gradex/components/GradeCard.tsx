@@ -82,7 +82,7 @@ const GradeCard = memo(function GradeCard({
     const [requiredMarks, setRequiredMarks] = useState("0");
 
     // Find course details once using useMemo to prevent recalculation on each render
-    const courseDetails = useMemo(() => 
+    const courseDetails = useMemo(() =>
         courses?.find((a) => a.code === mark.courseCode),
         [courses, mark.courseCode]
     );
@@ -90,32 +90,26 @@ const GradeCard = memo(function GradeCard({
     // Calculate required marks whenever relevant data changes
     useEffect(() => {
         if (!mark || !currentGrade) return;
+        setRequiredMarks(
+            (
+                ((grade_points[currentGrade] -
+                    (Number(mark.overall.scored) + expectedInternal)) /
+                    40) *
+                75
+            ).toFixed(2),
+        );
+    }, [currentGrade, expectedInternal, mark, mark.overall.scored]);
 
-        // Prevent NaN calculations
-        const totalMarks = Number(mark.overall.total) || 100;
-        const scoredMarks = Number(mark.overall.scored) || 0;
-        const gradePointThreshold = grade_points[currentGrade] || 0;
-        
-        // Calculate required marks based on course type
-        const calculatedMarks = mark.courseType === "Practical" 
-            ? gradePointThreshold - (totalMarks + expectedInternal)
-            : ((gradePointThreshold - (totalMarks + expectedInternal)) / 40) * 75;
-
-        // Format and set required marks, preventing NaN
-        setRequiredMarks(isNaN(calculatedMarks) ? "0" : calculatedMarks.toFixed(2));
-    }, [currentGrade, expectedInternal, mark]);
-
-    // Set initial grade on component mount
     useEffect(() => {
         if (!mark) return;
-        
-        const scoredMarks = Number(mark.overall.scored) || 0;
-        const totalMarks = Number(mark.overall.total) || 100;
-        
-        const calculatedGrade = 
-            totalMarks === 100
-                ? getGrade(scoredMarks)
-                : determineGrade(scoredMarks, totalMarks);
+        const total = Number(mark.overall.total);
+        const scored = Number(mark.overall.scored);
+        const lostMark = total - scored;
+
+        const calculatedGrade =
+            total == 100
+                ? getGrade(Number(mark.overall.scored))
+                : determineGrade(lostMark, total);
                 
         updateGrade(mark.courseCode, calculatedGrade);
     }, [mark, updateGrade]);
@@ -146,7 +140,7 @@ const GradeCard = memo(function GradeCard({
     return (
         <div
             className={`${isExcluded ? "opacity-30" : "opacity-100"} flex min-h-40 flex-col justify-between gap-8 rounded-2xl transition-all duration-100 ${Number(mark.overall.total) <= 60
-                    ? "bg-light-background-normal dark:bg-dark-background-normal"
+                ? "bg-light-background-normal dark:bg-dark-background-normal"
                 : `bg-opacity-80 dark:bg-opacity-40 bg-light-background-normal dark:bg-dark-background-normal`
                 } p-4 px-5 text-light-color dark:text-dark-color`}
         >
@@ -219,7 +213,7 @@ const GradeCard = memo(function GradeCard({
                                             : Number(requiredMarks) > (mark.courseType === "Practical" ? 40 : 75)
                                                 ? "text-light-error-color dark:text-dark-error-color"
                                                 : "text-light-success-color dark:text-dark-success-color"
-                                    }`}
+                                        }`}
                                 >
                                     {requiredMarks}
                                 </span>
