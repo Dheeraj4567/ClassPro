@@ -11,7 +11,7 @@ export default function PaperLink({
   return (
 
     <Link
-      href={`https://docs.google.com/gview?url=https://class-pro.vercel.app/academia/library/render?id=${(link)}`}
+      href={`https://docs.google.com/gview?url=${window.location.origin}/academia/library/render?id=${(link)}`}
       tabIndex={0}
       title={period}
       target="_blank"

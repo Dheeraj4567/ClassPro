@@ -12,18 +12,6 @@
   targetPort = 3000
 
 [[redirects]]
-  from = "/courses"
-  to = "/academia/courses"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/calendar"
-  to = "/academia/calendar"
-  status = 301
-  force = true
-
-[[redirects]]
   from = "/elab"
   to = "https://better-lab.vercel.app"
   status = 301
@@ -70,9 +58,3 @@
   to = "https://chat.whatsapp.com/FLvHgGU87OLEOeQIqJEhto"
   status = 301
   force = true
-
-# This ensures that all routes are handled by Next.js
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/next"
-  status = 200
