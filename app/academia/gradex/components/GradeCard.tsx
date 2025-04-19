@@ -5,7 +5,7 @@ import Medal from "./Medals";
 import { getGrade } from "@/types/Grade";
 import { Course } from "@/types/Course";
 import { MarkDisplay } from "../../components/Marks/Card/MarkElement";
-import { determineGrade, gradePoints as sgpaGradePoints } from "./GradeCalculator";
+import { determineGrade, gradePoints as sgpaGradePoints } from "@/utils/Grade";
 
 // Grade point values for scoring calculation - moved outside component to prevent recreation
 export const grade_points: { [key: string]: number } = {
@@ -78,9 +78,10 @@ const GradeCard = memo(function GradeCard({
     courses: Course[]
 }) {
     const [editMode, setEditMode] = useState(false);
-    const [expectedInternal, setExpectedInternal] = useState(0);
+    const [expectedInternal, setExpectedInternal] = useState(60 - Number(mark.overall.total));
     const [requiredMarks, setRequiredMarks] = useState("0");
 
+       
     // Find course details once using useMemo to prevent recalculation on each render
     const courseDetails = useMemo(() =>
         courses?.find((a) => a.code === mark.courseCode),
@@ -90,15 +91,27 @@ const GradeCard = memo(function GradeCard({
     // Calculate required marks whenever relevant data changes
     useEffect(() => {
         if (!mark || !currentGrade) return;
-        setRequiredMarks(
-            (
-                ((grade_points[currentGrade] -
-                    (Number(mark.overall.scored) + expectedInternal)) /
-                    40) *
-                75
-            ).toFixed(2),
+        
+        const total_internal_score = Number(mark.overall.scored) + expectedInternal;
+        const isPractical = mark.courseType === "Practical";
+        const maxExternalMarks = isPractical ? 40 : 75;
+
+        const calculatedRequiredMarks = (
+            ((grade_points[currentGrade] - total_internal_score) / 40) * 
+            maxExternalMarks // Use the correctly determined max marks here
         );
-    }, [currentGrade, expectedInternal, mark, mark.overall.scored]);
+
+        setRequiredMarks(calculatedRequiredMarks.toFixed(2));
+
+        // Check against the correct maximum for this course type
+        if (calculatedRequiredMarks > maxExternalMarks) { 
+            const currentSliderValue = parseInt(getSliderValue(currentGrade));
+            if (currentSliderValue > 0) { 
+                const nextLowerGrade = gradeMap[currentSliderValue - 1];
+                updateGrade(mark.courseCode, nextLowerGrade);
+            }
+        }
+    }, [currentGrade, expectedInternal, mark, updateGrade]);
 
     useEffect(() => {
         if (!mark) return;
