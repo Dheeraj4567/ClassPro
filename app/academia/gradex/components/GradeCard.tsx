@@ -81,10 +81,7 @@ const GradeCard = memo(function GradeCard({
     const [expectedInternal, setExpectedInternal] = useState(60 - Number(mark.overall.total));
     const [requiredMarks, setRequiredMarks] = useState("0");
 
-        if(Number(requiredMarks) > 75 ){
-            console.log(requiredMarks);
-        }
-
+       
     // Find course details once using useMemo to prevent recalculation on each render
     const courseDetails = useMemo(() =>
         courses?.find((a) => a.code === mark.courseCode),
