@@ -73,13 +73,22 @@ export default function GradeCalculator({ marks, courses }: { marks: Mark[], cou
         const initialGrades: { [courseCode: string]: string } = {};
         
         marks.forEach((mark) => {
-            initialGrades[mark.courseCode] = 
-                Number(mark.overall.total) == 100
-                    ? getGrade(Number(mark.overall.scored))
-                    : determineGrade(
-                        Number(mark.overall.scored),
-                        Number(mark.overall.total),
-                    );
+            const total = Number(mark.overall.total);
+            const scored = Number(mark.overall.scored);
+            let initialGradeValue: string;
+
+            if (total < 60) {
+                const maxRemainingInternal = 60 - total;
+                const maxExternal = 40;
+                const maxPotentialScore = scored + maxRemainingInternal + maxExternal;
+                initialGradeValue = getGrade(Math.min(maxPotentialScore, 100));
+            } else {
+                initialGradeValue = total === 100
+                    ? getGrade(scored)
+                    : determineGrade(scored, total);
+            }
+
+            initialGrades[mark.courseCode] = initialGradeValue;
         });
         
         setGrades(initialGrades);

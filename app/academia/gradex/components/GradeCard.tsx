@@ -78,7 +78,7 @@ const GradeCard = memo(function GradeCard({
     courses: Course[]
 }) {
     const [editMode, setEditMode] = useState(false);
-    const [expectedInternal, setExpectedInternal] = useState(0);
+    const [expectedInternal, setExpectedInternal] = useState(60 - Number(mark.overall.total));
     const [requiredMarks, setRequiredMarks] = useState("0");
 
     // Find course details once using useMemo to prevent recalculation on each render
