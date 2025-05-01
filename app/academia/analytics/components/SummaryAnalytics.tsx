@@ -75,8 +75,9 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
     const currentCGPA = (totalGradePoints / totalCredits).toFixed(2);
     
     // Calculate different CGPA projections (average case, above average, and best case)
+    // Note: We're not factoring in attendance for CGPA calculations
     
-    // Average case: modest improvement based on current performance trend
+    // Average case: modest improvement based on current performance trend only
     const avgImprovement = Math.min(0.5, 10 - Number(currentCGPA)); 
     const averageCGPA = Math.min(10, Number(currentCGPA) + avgImprovement).toFixed(2);
     
@@ -91,10 +92,10 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
     const projectedRange = `${averageCGPA} - ${bestCGPA}`;
     
     // Calculate probability of getting higher grades based on current performance
-    // and attendance
+    // Attendance only factors into this prediction, not the actual CGPA calculation
     let highScoreProbability = 0;
     
-    // Base probability on current performance
+    // Base probability on current performance only
     if (Number(currentCGPA) >= 9) {
       highScoreProbability = 90;
     } else if (Number(currentCGPA) >= 8) {
@@ -107,14 +108,12 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
       highScoreProbability = 35;
     }
     
-    // Adjust based on attendance - good attendance boosts chances
+    // Attendance only affects probability of high scores, not the CGPA itself
     if (overallAttendancePercentage >= 90) {
-      highScoreProbability += 10;
-    } else if (overallAttendancePercentage >= 80) {
-      highScoreProbability += 5;
+      highScoreProbability += 5; // Reduced impact
     } else if (overallAttendancePercentage < 75) {
-      // Attendance below 75% may negatively impact performance
-      highScoreProbability -= 10;
+      // Attendance below 75% may negatively impact performance probability, not CGPA
+      highScoreProbability -= 5; // Reduced impact
     }
     
     // Cap at 95% - always leave room for uncertainty
@@ -317,7 +316,7 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
             </div>
             
             <div className="mt-2 p-2 bg-light-background-normal dark:bg-dark-background-normal rounded text-xs text-light-color/70 dark:text-dark-color/70">
-              <p>This is an estimate based on current performance and attendance patterns. The range shows potential outcomes from average to best-case scenarios.</p>
+              <p>This is an estimate based on your current academic performance. The range shows potential outcomes from average to best-case scenarios.</p>
             </div>
           </div>
         </div>
