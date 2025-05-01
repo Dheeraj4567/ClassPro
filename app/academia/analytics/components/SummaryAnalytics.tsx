@@ -39,28 +39,98 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
     ? (totalPresent / totalClasses) * 100 
     : 0;
 
-  // Calculate CGPA (simplified estimation)
-  const totalCredits = courses.reduce((sum, course) => sum + Number(course.credit || 0), 0);
-  const totalGradePoints = marks.reduce((sum, mark) => {
-    const percentage = Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100;
-    let gradePoint = 0;
+  // Calculate CGPA with enhanced algorithm and optimistic projections
+  const calculateCGPA = () => {
+    if (!marks.length || !courses.length) {
+      return { 
+        cgpa: "N/A", 
+        averageCGPA: "N/A",
+        bestCGPA: "N/A",
+        projectedRange: "N/A",
+        highScoreProbability: 0 
+      };
+    }
+
+    const totalCredits = courses.reduce((sum, course) => sum + Number(course.credit || 0), 0);
     
-    if (percentage >= 90) gradePoint = 10;
-    else if (percentage >= 80) gradePoint = 9;
-    else if (percentage >= 70) gradePoint = 8;
-    else if (percentage >= 60) gradePoint = 7;
-    else if (percentage >= 50) gradePoint = 6;
-    else if (percentage >= 45) gradePoint = 5;
-    else if (percentage >= 40) gradePoint = 4;
-    else gradePoint = 0;
+    // Calculate current CGPA based on existing marks
+    const totalGradePoints = marks.reduce((sum, mark) => {
+      const percentage = Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100;
+      let gradePoint = 0;
+      
+      // Standard grading scale
+      if (percentage >= 90) gradePoint = 10;
+      else if (percentage >= 80) gradePoint = 9;
+      else if (percentage >= 70) gradePoint = 8;
+      else if (percentage >= 60) gradePoint = 7;
+      else if (percentage >= 50) gradePoint = 6;
+      else if (percentage >= 45) gradePoint = 5;
+      else if (percentage >= 40) gradePoint = 4;
+      else gradePoint = 3;
+      
+      const course = courses.find(c => c.code === mark.courseCode);
+      return sum + (gradePoint * Number(course?.credit || 0));
+    }, 0);
     
-    const course = courses.find(c => c.code === mark.courseCode);
-    return sum + (gradePoint * Number(course?.credit || 0));
-  }, 0);
+    const currentCGPA = (totalGradePoints / totalCredits).toFixed(2);
+    
+    // Calculate different CGPA projections (average case, above average, and best case)
+    
+    // Average case: modest improvement based on current performance trend
+    const avgImprovement = Math.min(0.5, 10 - Number(currentCGPA)); 
+    const averageCGPA = Math.min(10, Number(currentCGPA) + avgImprovement).toFixed(2);
+    
+    // Best case: optimistic improvement similar to GradeX approach
+    const bestImprovement = Math.min(1.5, 10 - Number(currentCGPA)); 
+    const bestCGPA = Math.min(10, Number(currentCGPA) + bestImprovement).toFixed(2);
+    
+    // Calculate mid-point of range (for progress bar visualization)
+    const midPointCGPA = ((Number(averageCGPA) + Number(bestCGPA)) / 2).toFixed(2);
+    
+    // Format as range
+    const projectedRange = `${averageCGPA} - ${bestCGPA}`;
+    
+    // Calculate probability of getting higher grades based on current performance
+    // and attendance
+    let highScoreProbability = 0;
+    
+    // Base probability on current performance
+    if (Number(currentCGPA) >= 9) {
+      highScoreProbability = 90;
+    } else if (Number(currentCGPA) >= 8) {
+      highScoreProbability = 80;
+    } else if (Number(currentCGPA) >= 7) {
+      highScoreProbability = 65;
+    } else if (Number(currentCGPA) >= 6) {
+      highScoreProbability = 50;
+    } else {
+      highScoreProbability = 35;
+    }
+    
+    // Adjust based on attendance - good attendance boosts chances
+    if (overallAttendancePercentage >= 90) {
+      highScoreProbability += 10;
+    } else if (overallAttendancePercentage >= 80) {
+      highScoreProbability += 5;
+    } else if (overallAttendancePercentage < 75) {
+      // Attendance below 75% may negatively impact performance
+      highScoreProbability -= 10;
+    }
+    
+    // Cap at 95% - always leave room for uncertainty
+    highScoreProbability = Math.min(95, Math.max(20, highScoreProbability));
+    
+    return { 
+      cgpa: currentCGPA,
+      averageCGPA,
+      bestCGPA,
+      projectedRange,
+      midPointCGPA,
+      highScoreProbability
+    };
+  };
   
-  const estimatedCGPA = totalCredits > 0 
-    ? (totalGradePoints / totalCredits).toFixed(2)
-    : "N/A";
+  const cgpaData = calculateCGPA();
 
   // Performance status
   const getPerformanceStatus = () => {
@@ -182,31 +252,72 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
             <div className="flex items-end justify-between">
               <div>
                 <p className={`text-3xl font-semibold ${
-                  Number(estimatedCGPA) >= 8 
+                  Number(cgpaData.cgpa) >= 8 
                     ? "text-light-success-color dark:text-dark-success-color" 
-                    : Number(estimatedCGPA) >= 6 
+                    : Number(cgpaData.cgpa) >= 6 
                       ? "text-light-warn-color dark:text-dark-warn-color" 
                       : "text-light-error-color dark:text-dark-error-color"
                 }`}>
-                  {estimatedCGPA}
+                  {cgpaData.cgpa}
                 </p>
-                <p className="text-sm text-light-color/60 dark:text-dark-color/60">Estimated CGPA</p>
+                <p className="text-sm text-light-color/60 dark:text-dark-color/60">Current CGPA</p>
               </div>
               <p className="text-sm text-light-color/60 dark:text-dark-color/60">
-                {totalCredits} Credits
+                <span className="text-light-accent dark:text-dark-accent font-medium">Projected: </span>
+                {cgpaData.projectedRange}
               </p>
             </div>
-            <div className="mt-3 h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-              <div 
-                className={`h-full ${
-                  Number(estimatedCGPA) >= 8 
-                    ? "bg-light-success-color dark:bg-dark-success-color" 
-                    : Number(estimatedCGPA) >= 6 
-                      ? "bg-light-warn-color dark:bg-dark-warn-color" 
-                      : "bg-light-error-color dark:bg-dark-error-color"
-                }`}
-                style={{ width: `${Math.min((Number(estimatedCGPA) / 10) * 100, 100)}%` }}
-              />
+            <div className="mt-4 relative">
+              <div className="h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
+                {/* Current CGPA marker */}
+                <div 
+                  className={`h-full ${
+                    Number(cgpaData.cgpa) >= 8 
+                      ? "bg-light-success-color dark:bg-dark-success-color" 
+                      : Number(cgpaData.cgpa) >= 6 
+                        ? "bg-light-warn-color dark:bg-dark-warn-color" 
+                        : "bg-light-error-color dark:bg-dark-error-color"
+                  }`}
+                  style={{ width: `${Math.min((Number(cgpaData.cgpa) / 10) * 100, 100)}%` }}
+                />
+                {/* Projected range overlay */}
+                <div
+                  className="absolute top-0 h-2 bg-light-accent dark:bg-dark-accent opacity-50"
+                  style={{ 
+                    left: `${Math.min((Number(cgpaData.cgpa) / 10) * 100, 100)}%`, 
+                    width: `${((Number(cgpaData.bestCGPA) - Number(cgpaData.cgpa)) / 10) * 100}%` 
+                  }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-xs mt-1 text-light-color/50 dark:text-dark-color/50">
+                <span>0.0</span>
+                <span>2.0</span>
+                <span>4.0</span>
+                <span>6.0</span>
+                <span>8.0</span>
+                <span>10.0</span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-light-background-normal dark:bg-dark-background-normal p-2 text-center">
+                <p className="text-xs text-light-color/50 dark:text-dark-color/50">Average Case</p>
+                <p className="font-medium">{cgpaData.averageCGPA}</p>
+              </div>
+              <div className="rounded-lg bg-light-background-normal dark:bg-dark-background-normal p-2 text-center">
+                <p className="text-xs text-light-color/50 dark:text-dark-color/50">Best Case</p>
+                <p className="font-medium">{cgpaData.bestCGPA}</p>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <p className="text-sm text-light-color/60 dark:text-dark-color/60">
+                Probability of achieving 80-100% marks: <span className="font-medium">{cgpaData.highScoreProbability}%</span>
+              </p>
+            </div>
+            
+            <div className="mt-2 p-2 bg-light-background-normal dark:bg-dark-background-normal rounded text-xs text-light-color/70 dark:text-dark-color/70">
+              <p>This is an estimate based on current performance and attendance patterns. The range shows potential outcomes from average to best-case scenarios.</p>
             </div>
           </div>
         </div>
