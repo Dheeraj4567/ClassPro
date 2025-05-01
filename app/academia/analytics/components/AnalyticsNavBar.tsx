@@ -17,19 +17,64 @@ export default function AnalyticsNavBar() {
     ];
 
     useEffect(() => {
-        const getCurrentView = () => {
-            return window.location.hash.slice(1) || 'summary';
+        // Function to handle both hash changes and scrolling
+        const updateCurrentView = () => {
+            // Get current hash or use default
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                setCurrentView(hash);
+                return;
+            }
+            
+            // If no hash is present, determine current section by scroll position
+            const sections = views.map(view => 
+                document.getElementById(view.id)
+            ).filter(Boolean);
+            
+            if (sections.length === 0) return;
+            
+            // Get current scroll position
+            const scrollPosition = window.scrollY + window.innerHeight / 3;
+            
+            // Find the current section in view
+            for (let i = sections.length - 1; i >= 0; i--) {
+                const section = sections[i];
+                if (!section) continue;
+                
+                const sectionTop = section.offsetTop;
+                if (scrollPosition >= sectionTop) {
+                    setCurrentView(section.id);
+                    break;
+                }
+            }
+            
+            // If we're at the very top, select the first section
+            if (window.scrollY < 100) {
+                setCurrentView(sections[0]?.id || 'summary');
+            }
         };
 
-        setCurrentView(getCurrentView());
+        // Initial update
+        updateCurrentView();
 
-        const handleHashChange = () => {
-            setCurrentView(getCurrentView());
+        // Listen for hash changes
+        window.addEventListener('hashchange', updateCurrentView);
+        
+        // Listen for scroll events - using throttling to improve performance
+        let scrollTimeout: NodeJS.Timeout;
+        const handleScroll = () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(updateCurrentView, 50);
         };
-
-        window.addEventListener('hashchange', handleHashChange);
-        return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
+        
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        
+        return () => {
+            window.removeEventListener('hashchange', updateCurrentView);
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(scrollTimeout);
+        };
+    }, [views]);
 
     return (
         <nav className="sticky bottom-2 z-50 w-full flex items-center justify-center">
