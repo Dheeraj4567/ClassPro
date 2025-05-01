@@ -1,11 +1,7 @@
 import React from "react";
 import { fetchUserData } from "@/hooks/fetchUserData";
 import { fetchCalendar } from "@/hooks/fetchCalendar";
-import dynamic from "next/dynamic";
-
-// Using dynamic imports with ssr disabled to ensure client-side only rendering
-const MarksAnalytics = dynamic(() => import("./components/MarksAnalytics"), { ssr: false });
-const AttendanceAnalytics = dynamic(() => import("./components/AttendanceAnalytics"), { ssr: false });
+import AnalyticsClient from "./components/AnalyticsClient";
 
 export default async function Analytics() {
   // Fetch data on the server
@@ -25,9 +21,13 @@ export default async function Analytics() {
         </p>
       </section>
 
-      {/* Pass data to client components */}
-      <MarksAnalytics marks={marks?.marks} courses={courses?.courses} />
-      <AttendanceAnalytics attendance={attendance?.attendance} calendar={calendarData?.calendar} />
+      {/* Pass data to client components via the client wrapper */}
+      <AnalyticsClient 
+        marks={marks?.marks} 
+        courses={courses?.courses} 
+        attendance={attendance?.attendance} 
+        calendar={calendarData?.calendar} 
+      />
     </div>
   );
 }
