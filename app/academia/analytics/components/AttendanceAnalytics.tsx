@@ -299,10 +299,9 @@ const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = 
                   }}
                   activeDot={{
                     fill: "var(--color-light-accent)",
-                    className: "dark:fill-dark-accent",
                     r: 7,
                     stroke: "var(--color-light-background-light)",
-                    className: "dark:stroke-dark-background-normal",
+                    className: "dark:stroke-dark-background-normal dark:fill-dark-accent",
                     strokeWidth: 2
                   }}
                 />
