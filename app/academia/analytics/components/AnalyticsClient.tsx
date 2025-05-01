@@ -7,9 +7,11 @@ import { Course } from "@/types/Course";
 import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";
 
-// Using dynamic imports with ssr disabled to ensure client-side only rendering
+// Using dynamic imports for all analytics components
+const SummaryAnalytics = dynamic(() => import("./SummaryAnalytics"), { ssr: false });
 const MarksAnalytics = dynamic(() => import("./MarksAnalytics"), { ssr: false });
 const AttendanceAnalytics = dynamic(() => import("./AttendanceAnalytics"), { ssr: false });
+const PerformanceAnalytics = dynamic(() => import("./PerformanceAnalytics"), { ssr: false });
 
 interface AnalyticsClientProps {
   marks?: Mark[];
@@ -26,8 +28,27 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
 }) => {
   return (
     <>
-      <MarksAnalytics marks={marks} courses={courses} />
-      <AttendanceAnalytics attendance={attendance} calendar={calendar} />
+      <SummaryAnalytics 
+        marks={marks} 
+        courses={courses} 
+        attendance={attendance} 
+        calendar={calendar} 
+      />
+      
+      <div id="marks">
+        <MarksAnalytics marks={marks} courses={courses} />
+      </div>
+      
+      <div id="attendance">
+        <AttendanceAnalytics attendance={attendance} calendar={calendar} />
+      </div>
+      
+      <PerformanceAnalytics 
+        marks={marks} 
+        courses={courses} 
+        attendance={attendance} 
+        calendar={calendar} 
+      />
     </>
   );
 };

@@ -103,6 +103,11 @@ export function Sidebar({
               Home
             </Link>
 
+            <Link onClick={handleClick} href='/academia/analytics'>
+              <BsCalculatorFill className='text-xl' />
+              Analytics
+            </Link>
+
             <Link onClick={handleClick} href='/academia/courses'>
               <FaGraduationCap className='text-xl' />
               Course list
