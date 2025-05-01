@@ -2,11 +2,7 @@ import React from "react";
 import { fetchUserData } from "@/hooks/fetchUserData";
 import { fetchCalendar } from "@/hooks/fetchCalendar";
 import AnalyticsClient from "./components/AnalyticsClient";
-import dynamic from "next/dynamic";
-
-const AnalyticsNavBar = dynamic(() => import("./components/AnalyticsNavBar"), {
-  ssr: false
-});
+import NavBarWrapper from "./components/NavBarWrapper";
 
 export default async function Analytics() {
   // Fetch data on the server
@@ -35,7 +31,7 @@ export default async function Analytics() {
           calendar={calendarData?.calendar} 
         />
       </div>
-      <AnalyticsNavBar />
+      <NavBarWrapper />
     </>
   );
 }
