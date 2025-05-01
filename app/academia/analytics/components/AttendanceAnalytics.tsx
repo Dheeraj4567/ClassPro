@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";

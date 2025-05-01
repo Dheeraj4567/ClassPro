@@ -3,11 +3,12 @@ import { fetchUserData } from "@/hooks/fetchUserData";
 import { fetchCalendar } from "@/hooks/fetchCalendar";
 import dynamic from "next/dynamic";
 
-// Using dynamic imports to resolve component loading issues
-const MarksAnalytics = dynamic(() => import("./components/MarksAnalytics"));
-const AttendanceAnalytics = dynamic(() => import("./components/AttendanceAnalytics"));
+// Using dynamic imports with ssr disabled to ensure client-side only rendering
+const MarksAnalytics = dynamic(() => import("./components/MarksAnalytics"), { ssr: false });
+const AttendanceAnalytics = dynamic(() => import("./components/AttendanceAnalytics"), { ssr: false });
 
 export default async function Analytics() {
+  // Fetch data on the server
   const userData = await fetchUserData();
   const calendarData = await fetchCalendar();
   
@@ -24,6 +25,7 @@ export default async function Analytics() {
         </p>
       </section>
 
+      {/* Pass data to client components */}
       <MarksAnalytics marks={marks?.marks} courses={courses?.courses} />
       <AttendanceAnalytics attendance={attendance?.attendance} calendar={calendarData?.calendar} />
     </div>
