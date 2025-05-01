@@ -5,12 +5,12 @@ import React, { useEffect, useState } from 'react';
 import { FiPercent } from "react-icons/fi";
 import { BsFillPersonCheckFill } from "react-icons/bs";
 import { FaChartBar } from "react-icons/fa";
-import { TbSummary } from "react-icons/tb";
+import { TbReport } from "react-icons/tb";
 
 export default function AnalyticsNavBar() {
     const [currentView, setCurrentView] = useState('summary');
     const views = [
-        { id: 'summary', label: <TbSummary />, title: 'Summary' },
+        { id: 'summary', label: <TbReport />, title: 'Summary' },
         { id: 'marks', label: <FiPercent />, title: 'Marks' },
         { id: 'attendance', label: <BsFillPersonCheckFill />, title: 'Attendance' },
         { id: 'performance', label: <FaChartBar />, title: 'Performance' }
