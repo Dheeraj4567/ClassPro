@@ -103,14 +103,7 @@ const GradeCard = memo(function GradeCard({
 
         setRequiredMarks(calculatedRequiredMarks.toFixed(2));
 
-        // Check against the correct maximum for this course type
-        if (calculatedRequiredMarks > maxExternalMarks) { 
-            const currentSliderValue = parseInt(getSliderValue(currentGrade));
-            if (currentSliderValue > 0) { 
-                const nextLowerGrade = gradeMap[currentSliderValue - 1];
-                updateGrade(mark.courseCode, nextLowerGrade);
-            }
-        }
+       
     }, [currentGrade, expectedInternal, mark, updateGrade]);
 
     useEffect(() => {
