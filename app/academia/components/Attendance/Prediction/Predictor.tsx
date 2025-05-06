@@ -53,21 +53,23 @@ export default function Predictor({
 		[],
 	);
 
-	const predictWindow = useRef<HTMLDivElement>(null);
-	const list = useRef<HTMLDivElement>(null);
+	const predictWindow = useRef<HTMLDivElement | null>(null);
+	const list = useRef<HTMLDivElement | null>(null);
+	const [predictWindowElement, setPredictWindowElement] = useState<HTMLDivElement | null>(null);
+	const [listElement, setListElement] = useState<HTMLDivElement | null>(null); 
 
 	useEffect(() => {
-		predictWindow.current = document.getElementById(
-			"attendance-predict",
-		) as HTMLDivElement;
-
-		list.current = document.getElementById("attendance-list") as HTMLDivElement;
-
+		// Use state setters instead of directly modifying ref.current
+		const predictEl = document.getElementById("attendance-predict") as HTMLDivElement | null;
+		const listEl = document.getElementById("attendance-list") as HTMLDivElement | null;
+		
+		setPredictWindowElement(predictEl);
+		setListElement(listEl);
 		setTitleSuffix(document.getElementById("attendance-title-suffix") as HTMLDivElement);
 
 		return () => {
-			list.current = null;
-			predictWindow.current = null;
+			setPredictWindowElement(null);
+			setListElement(null);
 			setTitleSuffix(null);
 		};
 	}, []);
@@ -108,7 +110,7 @@ export default function Predictor({
 
 	return (
 		<>
-			{predictWindow.current &&
+			{predictWindowElement &&
 				isOpen &&
 				createPortal(
 					<div
@@ -161,9 +163,9 @@ export default function Predictor({
 							</Suspense>
 						</div>
 					</div>,
-					predictWindow.current,
+					predictWindowElement,
 				)}
-			{list.current &&
+			{listElement &&
 				createPortal(
 					<div className="flex justify-center flex-col mt-4">
 						{priority?.[0] && (
@@ -181,7 +183,7 @@ export default function Predictor({
 							</div>
 						)}
 					</div>,
-					list.current,
+					listElement,
 				)}
 			{titleSuffix && createPortal(
 				categorizedRanges.length > 0 && (
