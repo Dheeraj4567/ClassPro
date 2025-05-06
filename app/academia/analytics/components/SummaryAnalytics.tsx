@@ -39,7 +39,7 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
     ? (totalPresent / totalClasses) * 100 
     : 0;
 
-  // Calculate CGPA with enhanced algorithm and optimistic projections
+  // Calculate CGPA with enhanced algorithm using GradeX approach
   const calculateCGPA = () => {
     if (!marks.length || !courses.length) {
       return { 
@@ -47,106 +47,109 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
         averageCGPA: "N/A",
         bestCGPA: "N/A",
         projectedRange: "N/A",
+        midPointCGPA: "N/A",
         highScoreProbability: 0 
       };
     }
 
+    // Calculate total credits with a safety check
     const totalCredits = courses.reduce((sum, course) => sum + Number(course.credit || 0), 0);
     
+    // Guard against division by zero
+    if (totalCredits === 0) {
+      return { 
+        cgpa: "0.00", 
+        averageCGPA: "0.00",
+        bestCGPA: "0.00",
+        projectedRange: "0.00 - 0.00",
+        midPointCGPA: "0.00",
+        highScoreProbability: 0 
+      };
+    }
+    
     // Calculate current CGPA based on existing marks
+    // Using the GradeX approach for projecting potential scores
     const totalGradePoints = marks.reduce((sum, mark) => {
-      const percentage = Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100;
+      const scored = Number(mark.overall.scored || 0);
+      const total = Number(mark.overall.total || 1);
+      
+      // Using GradeX approach: For incomplete assessments, assume remaining marks
+      let potentialScore;
+      if (total < 60) {
+        // For courses where internal assessments are not yet complete (total < 60)
+        // Assume student will get remaining internal marks (up to 60) plus end sem marks (up to 40)
+        const maxRemainingInternal = 60 - total;
+        const maxExternal = 40; // End semester exam marks
+        potentialScore = Math.min(100, scored + maxRemainingInternal + maxExternal);
+      } else {
+        // For completed assessments or those already over 60 marks
+        // Just use the actual percentage
+        potentialScore = total === 100 ? scored : (scored / total) * 100;
+      }
+      
+      // Calculate grade point based on potential score
       let gradePoint = 0;
       
       // SRM University specific grading scale (10-point relative grading system)
-      if (percentage >= 91) gradePoint = 10;      // S Grade
-      else if (percentage >= 81) gradePoint = 9;  // A Grade
-      else if (percentage >= 71) gradePoint = 8;  // B Grade
-      else if (percentage >= 61) gradePoint = 7;  // C Grade
-      else if (percentage >= 56) gradePoint = 6;  // D Grade
-      else if (percentage >= 50) gradePoint = 5;  // E Grade
-      else gradePoint = 0;                        // F Grade (Fail)
+      if (potentialScore >= 91) gradePoint = 10;      // S/O Grade
+      else if (potentialScore >= 81) gradePoint = 9;  // A+ Grade
+      else if (potentialScore >= 71) gradePoint = 8;  // A Grade  
+      else if (potentialScore >= 61) gradePoint = 7;  // B+ Grade
+      else if (potentialScore >= 56) gradePoint = 6;  // B Grade
+      else if (potentialScore >= 50) gradePoint = 5;  // C Grade
+      else gradePoint = 0;                           // F Grade (Fail)
       
       const course = courses.find(c => c.code === mark.courseCode);
       return sum + (gradePoint * Number(course?.credit || 0));
     }, 0);
     
     const currentCGPA = (totalGradePoints / totalCredits).toFixed(2);
+    const currentCGPANum = parseFloat(currentCGPA);
     
-    // Enhanced CGPA projection calculations
+    // For projected CGPA calculations, calculate a more optimistic projection
+    // that assumes even better performance in remaining assessments
     
-    // Calculate weighted performance indicators
-    const weightedPerformance = marks.reduce((acc, mark) => {
-      const course = courses.find(c => c.code === mark.courseCode);
-      const credit = Number(course?.credit || 0);
-      const percentage = Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100;
-      
-      // More weight to recent and higher credit courses
-      return acc + (percentage * credit);
-    }, 0) / totalCredits;
+    // Average case: Modest improvement over current projected CGPA
+    const avgImprovement = Math.min(0.5, (10 - currentCGPANum) * 0.2);
+    const averageCGPA = Math.min(10, currentCGPANum + avgImprovement).toFixed(2);
     
-    // Trend-based improvement calculation
-    // The closer a student is to the next grade boundary, the more likely they are to improve
-    const nextGradeBoundary = 
-      weightedPerformance >= 91 ? 100 :
-      weightedPerformance >= 81 ? 91 :
-      weightedPerformance >= 71 ? 81 :
-      weightedPerformance >= 61 ? 71 :
-      weightedPerformance >= 56 ? 61 :
-      weightedPerformance >= 50 ? 56 : 50;
-    
-    const distanceToNextGrade = nextGradeBoundary - weightedPerformance;
-    
-    // Students closer to the next grade are more likely to achieve it
-    const improvementLikelihood = Math.max(0, 1 - (distanceToNextGrade / 10));
-    
-    // More optimistic projections
-    // Average case: top 20% of potential outcomes - higher than previous algorithm
-    const avgImprovement = Math.min(0.8, (10 - Number(currentCGPA)) * (improvementLikelihood + 0.2)); 
-    const averageCGPA = Math.min(10, Number(currentCGPA) + avgImprovement).toFixed(2);
-    
-    // Best case: very optimistic projection that shows the student's maximum potential
-    const bestImprovement = Math.min(1.5, (10 - Number(currentCGPA)) * (improvementLikelihood + 0.5)); 
-    const bestCGPA = Math.min(10, Number(currentCGPA) + bestImprovement).toFixed(2);
+    // Best case: More significant improvement assuming maximum performance
+    const bestImprovement = Math.min(1.0, (10 - currentCGPANum) * 0.35);
+    const bestCGPA = Math.min(10, currentCGPANum + bestImprovement).toFixed(2);
     
     // Calculate mid-point of range (for progress bar visualization)
-    const midPointCGPA = ((Number(averageCGPA) + Number(bestCGPA)) / 2).toFixed(2);
+    const midPointCGPA = ((parseFloat(averageCGPA) + parseFloat(bestCGPA)) / 2).toFixed(2);
     
     // Format as range
     const projectedRange = `${averageCGPA} - ${bestCGPA}`;
     
-    // Calculate probability of getting higher grades based on current performance
-    // Uses SRM-specific grade boundaries and historical performance patterns
-    // More optimistic probability calculation - NO ATTENDANCE FACTOR
+    // Calculate probability of getting higher grades
     let highScoreProbability = 0;
     
-    // Base probability on current CGPA using SRM's scale - more optimistic values
-    if (Number(currentCGPA) >= 9.5) {
+    // Base probability on current CGPA using SRM's scale - optimistic values
+    if (currentCGPANum >= 9.5) {
       highScoreProbability = 98;
-    } else if (Number(currentCGPA) >= 9) {
+    } else if (currentCGPANum >= 9) {
       highScoreProbability = 95;
-    } else if (Number(currentCGPA) >= 8.5) {
+    } else if (currentCGPANum >= 8.5) {
       highScoreProbability = 90;
-    } else if (Number(currentCGPA) >= 8) {
+    } else if (currentCGPANum >= 8) {
       highScoreProbability = 85;
-    } else if (Number(currentCGPA) >= 7.5) {
+    } else if (currentCGPANum >= 7.5) {
       highScoreProbability = 80;
-    } else if (Number(currentCGPA) >= 7) {
+    } else if (currentCGPANum >= 7) {
       highScoreProbability = 75;
-    } else if (Number(currentCGPA) >= 6.5) {
+    } else if (currentCGPANum >= 6.5) {
       highScoreProbability = 70;
-    } else if (Number(currentCGPA) >= 6) {
+    } else if (currentCGPANum >= 6) {
       highScoreProbability = 65;
-    } else if (Number(currentCGPA) >= 5.5) {
+    } else if (currentCGPANum >= 5.5) {
       highScoreProbability = 60;
-    } else if (Number(currentCGPA) >= 5) {
+    } else if (currentCGPANum >= 5) {
       highScoreProbability = 55;
     } else {
-      highScoreProbability = 45;  // More optimistic for lower performers too
+      highScoreProbability = 45;
     }
-    
-    // No attendance impact on probability - removed as requested
-    // CGPA calculation should be independent of attendance
     
     // Cap at 99% - almost perfect certainty in the optimistic model
     highScoreProbability = Math.min(99, Math.max(40, highScoreProbability));
@@ -280,22 +283,6 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
           {/* Estimated CGPA - Mobile optimized */}
           <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg sm:col-span-2 lg:col-span-1">
             <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">CGPA Estimation</h3>
-            <div className="flex items-end justify-between">
-              <div>
-                <p className={`text-2xl sm:text-3xl font-semibold ${
-                  Number(cgpaData.cgpa) >= 8 
-                    ? "text-light-success-color dark:text-dark-success-color" 
-                    : Number(cgpaData.cgpa) >= 6 
-                      ? "text-light-warn-color dark:text-dark-warn-color" 
-                      : "text-light-error-color dark:text-dark-error-color"
-                }`}>
-                  {cgpaData.cgpa}
-                </p>
-                <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">Current CGPA</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">
-                  <span className="text-light-accent dark:text-dark-accent font-medium">Projected: </span>
                 </p>
                 <p className="text-sm font-medium">{cgpaData.projectedRange}</p>
               </div>
