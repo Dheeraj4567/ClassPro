@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { AiOutlineClockCircle } from "react-icons/ai";
 import { FiPercent } from "react-icons/fi";
 import { BsFillPersonCheckFill } from "react-icons/bs";
 
 export default function NavBar() {
     const [currentView, setCurrentView] = useState('timetable');
+    const scrollingRef = useRef(false);
     const views = [
         { id: 'timetable', label: <AiOutlineClockCircle /> },
         { id: 'attendance', label: <BsFillPersonCheckFill /> },
@@ -19,58 +20,70 @@ export default function NavBar() {
         const updateCurrentView = () => {
             // Get current hash or use default
             const hash = window.location.hash.slice(1);
-            if (hash) {
+            if (hash && views.some(view => view.id === hash)) {
                 setCurrentView(hash);
                 return;
             }
             
             // If no hash is present, determine current section by scroll position
-            const sections = views.map(view => 
-                document.getElementById(view.id)
-            ).filter(Boolean);
+            const sections = views
+                .map(view => ({ id: view.id, element: document.getElementById(view.id) }))
+                .filter(item => item.element !== null);
             
             if (sections.length === 0) return;
             
-            // Get current scroll position
-            const scrollPosition = window.scrollY + window.innerHeight / 3;
+            // Get current scroll position with offset to trigger earlier
+            const scrollPosition = window.scrollY + window.innerHeight / 4;
             
-            // Find the current section in view
-            for (let i = sections.length - 1; i >= 0; i--) {
-                const section = sections[i];
-                if (!section) continue;
+            // Find the section currently in view
+            let currentSection = sections[0].id;
+            
+            for (const section of sections) {
+                if (!section.element) continue;
                 
-                const sectionTop = section.offsetTop;
+                const rect = section.element.getBoundingClientRect();
+                const sectionTop = rect.top + window.scrollY;
+                
+                // If we've scrolled past the top of this section
                 if (scrollPosition >= sectionTop) {
-                    setCurrentView(section.id);
+                    currentSection = section.id;
+                } else {
                     break;
                 }
             }
             
-            // If we're at the very top, select the first section
-            if (window.scrollY < 100) {
-                setCurrentView(sections[0]?.id || 'timetable');
-            }
+            setCurrentView(currentSection);
         };
 
-        // Initial update
-        updateCurrentView();
+        // Initial update when component mounts
+        setTimeout(updateCurrentView, 100);
 
         // Listen for hash changes
         window.addEventListener('hashchange', updateCurrentView);
         
-        // Listen for scroll events - using throttling to improve performance
-        let scrollTimeout: NodeJS.Timeout;
+        // Improved scroll event handler with requestAnimationFrame for better performance
+        let ticking = false;
+        
         const handleScroll = () => {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(updateCurrentView, 50);
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    updateCurrentView();
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
         
+        // Use passive listener for better scroll performance
         window.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // Also update view on window resize
+        window.addEventListener('resize', updateCurrentView);
         
         return () => {
             window.removeEventListener('hashchange', updateCurrentView);
             window.removeEventListener('scroll', handleScroll);
-            clearTimeout(scrollTimeout);
+            window.removeEventListener('resize', updateCurrentView);
         };
     }, [views]);
 
@@ -82,6 +95,9 @@ export default function NavBar() {
                         href={`#${view.id}`}
                         onClick={() => {
                             setCurrentView(view.id);
+                            // Set flag to avoid conflicts between manual navigation and scroll detection
+                            scrollingRef.current = true;
+                            setTimeout(() => { scrollingRef.current = false; }, 100);
                         }}
                         key={view.id}
                         className={`px-3 py-2 text-2xl rounded-full font-semibold transition-all duration-150 ${currentView === view.id ? 'bg-light-accent dark:bg-dark-accent text-light-background-light dark:text-dark-background-dark' : 'hover:bg-light-background-normal dark:hover:bg-dark-background-normal'}`}

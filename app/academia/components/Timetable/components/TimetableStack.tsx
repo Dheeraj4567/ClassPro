@@ -19,9 +19,7 @@ export default function TimetableStack({
 		tomorrow: Day;
 	ophours: string[];
 }) {
-	const [dOrder, setDo] = useState<string>(
-		today?.dayOrder === "-" ? "0" : today?.dayOrder,
-	);
+	const [dOrder, setDo] = useState<string>(today?.dayOrder);
 	const [currentTime, setTime] = useState<Date>(getIstTime());
 
 	const scheduleToday =
@@ -139,8 +137,8 @@ export default function TimetableStack({
 				</div>
 				<button
 					type="button"
-					onClick={() => setDo(today.dayOrder === "-" ? "0" : today.dayOrder)}
-					className={`rounded-full px-4 py-1 font-medium text-sm border border-dashed ${dOrder === (today.dayOrder === "-" ? "0" : today.dayOrder) ? "dark:bg-dark-success-background bg-light-success-background border-transparent text-light-success-color dark:text-dark-success-color" : "dark:bg-dark-color/5 bg-light-color/5 dark:border-dark-color/10 border-light-color/10 dark:text-dark-color text-light-color"} `}
+					onClick={() => setDo(today.dayOrder)}
+					className={`rounded-full px-4 py-1 font-medium text-sm border border-dashed ${dOrder === today.dayOrder ? "dark:bg-dark-success-background bg-light-success-background border-transparent text-light-success-color dark:text-dark-success-color" : "dark:bg-dark-color/5 bg-light-color/5 dark:border-dark-color/10 border-light-color/10 dark:text-dark-color text-light-color"} `}
 				>
 					Today
 				</button>

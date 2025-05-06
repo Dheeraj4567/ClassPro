@@ -3,28 +3,30 @@
 import React, { useState } from "react";
 import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, PieChart, Pie, Cell, RadialBarChart, RadialBar } from 'recharts';
 
 interface AttendanceAnalyticsProps {
   attendance?: AttendanceCourse[];
   calendar?: Calendar[];
 }
 
-// Define the interface for the selected course data
+// Define the interface for selected course data
 interface SelectedCourseData {
-  name: string;
+  facultyName: string;
   courseCode: string;
-  category: string;
-  present: number;
-  absent: number;
-  total: number;
-  attendancePercentage: string;
-  attendanceData?: AttendanceCourse;
+  courseTitle: string;
+  slot: string;
+  hoursConducted: number;
+  hoursPresent: number;
+  hoursAbsent: number;
+  attendancePercentage: number;
 }
 
 const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = [], calendar = [] }) => {
-  // State to track the selected course for the detailed modal view
+  // State to track the selected course for detailed view
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourseData | null>(null);
+  // State for chart display orientation on mobile
+  const [mobileView, setMobileView] = useState<'vertical' | 'horizontal'>('horizontal');
 
   // If no attendance data available, show placeholder
   if (!attendance?.length) {
@@ -37,136 +39,72 @@ const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = 
       </section>
     );
   }
-
-  // Process attendance data for charts
-  const attendanceData = attendance.map(course => {
-    const present = Number(course.hoursConducted) - Number(course.hoursAbsent);
-    const total = Number(course.hoursConducted);
-    const absent = Number(course.hoursAbsent);
-    const attendancePercentage = (present / total) * 100;
-
+  
+  // Create processed data for charts
+  const chartData = attendance.map(course => {
+    const hoursPresent = Number(course.hoursConducted) - Number(course.hoursAbsent);
+    const attendancePercentage = (hoursPresent / Number(course.hoursConducted)) * 100;
+    
     return {
-      name: course.courseTitle.split(':')[0],
+      facultyName: course.facultyName,
       courseCode: course.courseCode,
-      category: course.category,
-      present,
-      absent,
-      total,
-      attendancePercentage: attendancePercentage.toFixed(1),
-      attendanceData: course // Store the original attendance data for detailed view
+      courseTitle: course.courseTitle,
+      slot: course.slot,
+      hoursConducted: Number(course.hoursConducted),
+      hoursPresent,
+      hoursAbsent: Number(course.hoursAbsent),
+      attendancePercentage
     };
   });
 
   // Calculate overall attendance statistics
-  const totalPresent = attendanceData.reduce((sum, course) => sum + course.present, 0);
-  const totalAbsent = attendanceData.reduce((sum, course) => sum + course.absent, 0);
-  const totalClasses = totalPresent + totalAbsent;
-  const overallAttendancePercentage = (totalPresent / totalClasses) * 100;
+  const totalConducted = chartData.reduce((sum, course) => sum + course.hoursConducted, 0);
+  const totalPresent = chartData.reduce((sum, course) => sum + course.hoursPresent, 0);
+  const totalAbsent = chartData.reduce((sum, course) => sum + course.hoursAbsent, 0);
+  const overallAttendancePercentage = totalConducted > 0 ? (totalPresent / totalConducted) * 100 : 0;
 
-  // Group courses by type for better organization
-  const theoryCourses = attendanceData.filter(course => course.category === "Theory");
-  const practicalCourses = attendanceData.filter(course => course.category === "Practical");
-
-  // Data for the pie chart
-  const pieData = [
-    { name: 'Present', value: totalPresent },
-    { name: 'Absent', value: totalAbsent }
-  ];
-
-  // Colors for the pie chart
-  const COLORS = ['var(--color-light-success-color)', 'var(--color-light-error-color)'];
-  const DARK_COLORS = ['var(--color-dark-success-color)', 'var(--color-dark-error-color)'];
-
-  // Attendance trend data from calendar (if available)
-  // This is a simplified simulation as we don't have the actual date-based attendance data
-  const trendData = [];
-  if (calendar?.length) {
-    // Generate some example trend data based on calendar
-    // In a real implementation, you would map actual attendance records to dates
-    const days = calendar[0]?.days?.slice(0, 10) || [];
-    let cumulativeAttendance = overallAttendancePercentage;
-    
-    days.forEach((day, index) => {
-      // Simulating attendance fluctuation
-      const fluctuation = Math.random() * 5 - 2.5;
-      cumulativeAttendance = Math.min(100, Math.max(0, cumulativeAttendance + fluctuation));
-      
-      trendData.push({
-        date: day.date,
-        attendance: cumulativeAttendance.toFixed(1)
-      });
-    });
-  }
-
-  // Handle click on a course to show detailed information
+  // Handle click on a bar to show detailed information
   const handleCourseClick = (data: SelectedCourseData) => {
     setSelectedCourse(data);
   };
-
-  // Handle click on a pie chart segment
-  const handlePieClick = (data: any) => {
-    // For pie chart clicks, we just show a summary of present/absent hours
-    if (data && data.name) {
-      // We don't set selectedCourse here as we're not showing course-specific data
-      // Instead we could show a different type of modal, but for simplicity,
-      // we'll just handle it with the tooltip for now
-    }
+  
+  // Toggle mobile chart view between horizontal and vertical
+  const toggleMobileView = () => {
+    setMobileView(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
-  // Custom tooltip for the pie chart
-  const PieTooltip = ({ active, payload }: any) => {
+  // Identify low attendance courses
+  const lowAttendanceCourses = chartData.filter(course => course.attendancePercentage < 75);
+  
+  // Data for overall attendance pie chart
+  const pieData = [
+    { name: "Present", value: totalPresent, fill: "var(--color-light-success-color)" },
+    { name: "Absent", value: totalAbsent, fill: "var(--color-light-error-color)" }
+  ];
+
+  // Colors for the charts
+  const COLORS = ["var(--color-light-success-color)", "var(--color-light-error-color)"];
+  const DARK_COLORS = ["var(--color-dark-success-color)", "var(--color-dark-error-color)"];
+
+  // Custom tooltip for the charts
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-light-background-light dark:bg-dark-background-normal p-4 rounded-lg shadow-lg border border-light-button dark:border-dark-button">
-          <p className="font-semibold">{data.name}</p>
-          <p className="text-sm">
-            Hours: <span className="font-medium">{data.value}</span>
-          </p>
-          <p className="text-sm">
-            Percentage: <span className="font-medium">
-              {((data.value / totalClasses) * 100).toFixed(1)}%
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Custom tooltip for attendance by course chart
-  const AttendanceTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-light-background-light dark:bg-dark-background-normal p-4 rounded-lg shadow-lg border border-light-button dark:border-dark-button">
-          <p className="font-semibold">{data.name}</p>
-          <p className="text-sm text-light-accent dark:text-dark-accent">
-            {data.category} • {data.courseCode}
-          </p>
+        <div className="bg-light-background-light dark:bg-dark-background-normal p-3 rounded-lg shadow-lg border border-light-button dark:border-dark-button">
+          <p className="font-semibold text-sm">{data.courseTitle || data.courseCode}</p>
           <div className="mt-2">
-            <p className="text-sm">
-              Present: <span className="font-medium text-light-success-color dark:text-dark-success-color">
-                {data.present} hrs
-              </span>
-            </p>
-            <p className="text-sm">
-              Absent: <span className="font-medium text-light-error-color dark:text-dark-error-color">
-                {data.absent} hrs
-              </span>
-            </p>
-            <p className="text-sm">
-              Total: <span className="font-medium">{data.total} hrs</span>
-            </p>
-            <p className="text-sm">
+            <p className="text-xs">Hours Present: <span className="font-medium">{data.hoursPresent}</span></p>
+            <p className="text-xs">Hours Absent: <span className="font-medium">{data.hoursAbsent}</span></p>
+            <p className="text-xs">
               Attendance: <span 
                 className={`font-medium ${
-                  Number(data.attendancePercentage) >= 75 
+                  data.attendancePercentage >= 75
                     ? "text-light-success-color dark:text-dark-success-color" 
                     : "text-light-error-color dark:text-dark-error-color"
                 }`}
               >
-                {data.attendancePercentage}%
+                {data.attendancePercentage.toFixed(1)}%
               </span>
             </p>
           </div>
@@ -180,285 +118,393 @@ const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = 
     <section className="w-full">
       <h2 className="text-2xl font-semibold pl-1">Attendance Analytics</h2>
       
-      <div className="my-4 p-5 bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-sm">
-        {/* Attendance summary cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-4 flex flex-col items-center justify-center">
+      <div className="my-4 p-3 sm:p-5 bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-sm">
+        {/* Overall attendance summary cards - Mobile friendly grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 sm:p-4 flex flex-col items-center justify-center">
             <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Overall Attendance</h3>
-            <p className={`text-3xl font-semibold ${
+            <p className={`text-2xl sm:text-3xl font-semibold ${
               overallAttendancePercentage >= 75 
                 ? "text-light-success-color dark:text-dark-success-color" 
                 : "text-light-error-color dark:text-dark-error-color"
             }`}>
               {overallAttendancePercentage.toFixed(1)}%
             </p>
-            <p className="text-sm text-light-color/60 dark:text-dark-color/60 mt-1">
-              Present: {totalPresent} hrs | Absent: {totalAbsent} hrs
+          </div>
+          
+          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 sm:p-4 flex flex-col items-center justify-center">
+            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Hours Present/Total</h3>
+            <div className="flex items-baseline">
+              <p className="text-2xl sm:text-3xl font-semibold">{totalPresent}</p>
+              <p className="text-base sm:text-lg text-light-color/60 dark:text-dark-color/60 ml-1">/ {totalConducted}</p>
+            </div>
+          </div>
+          
+          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 sm:p-4 flex flex-col items-center justify-center">
+            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Low Attendance</h3>
+            {lowAttendanceCourses.length > 0 ? (
+              <div className="flex flex-col items-center">
+                <p className="text-2xl sm:text-3xl font-semibold text-light-error-color dark:text-dark-error-color">
+                  {lowAttendanceCourses.length}
+                </p>
+                <p className="text-xs text-center mt-1">
+                  {lowAttendanceCourses.length} course{lowAttendanceCourses.length === 1 ? '' : 's'} below 75%
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <p className="text-2xl sm:text-3xl font-semibold text-light-success-color dark:text-dark-success-color">0</p>
+                <p className="text-xs text-center mt-1">All courses above 75% 👏</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Mobile view toggle control */}
+        <div className="block sm:hidden mb-4">
+          <button 
+            onClick={toggleMobileView}
+            className="w-full py-2 px-3 bg-light-background-light dark:bg-dark-background-light rounded-lg text-sm flex items-center justify-center gap-2"
+          >
+            <span>Switch to {mobileView === 'horizontal' ? 'Vertical' : 'Horizontal'} View</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+              <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+              <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+              <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+            </svg>
+          </button>
+        </div>
+        
+        {/* Course-wise Attendance Table - Responsive for mobile */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-3">Course-wise Attendance</h3>
+          <div className="bg-light-background-light dark:bg-dark-background-light p-2 sm:p-4 rounded-lg">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-light-button/20 dark:border-dark-button/20">
+                    <th className="text-left p-2">Course</th>
+                    <th className="text-right p-2">Hours</th>
+                    <th className="text-right p-2">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chartData.map((course, index) => (
+                    <tr 
+                      key={index} 
+                      className="border-b border-light-button/10 dark:border-dark-button/10 hover:bg-light-background-dark hover:dark:bg-dark-background-dark cursor-pointer"
+                      onClick={() => handleCourseClick(course)}
+                    >
+                      <td className="p-2">
+                        <div>
+                          <p className="font-medium">{course.courseTitle || course.courseCode}</p>
+                          <p className="text-xs text-light-accent dark:text-dark-accent">
+                            {course.courseCode} • {course.slot}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="p-2 text-right">{course.hoursPresent}/{course.hoursConducted}</td>
+                      <td className="p-2 text-right">
+                        <span className={
+                          course.attendancePercentage >= 75
+                            ? "text-light-success-color dark:text-dark-success-color" 
+                            : "text-light-error-color dark:text-dark-error-color"
+                        }>
+                          {course.attendancePercentage.toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-center text-light-color/60 dark:text-dark-color/60 mt-2">
+              Tap on any course for detailed information
             </p>
           </div>
-          
-          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-4 flex flex-col items-center justify-center">
-            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Total Classes</h3>
-            <p className="text-3xl font-semibold">{totalClasses}</p>
-            <p className="text-sm text-light-color/60 dark:text-dark-color/60 mt-1">Hours</p>
-          </div>
-          
-          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-4 flex flex-col items-center justify-center">
-            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Courses Tracked</h3>
-            <p className="text-3xl font-semibold">{attendanceData.length}</p>
-            <div className="flex gap-2 mt-1">
-              <span className="text-xs rounded-full bg-light-warn-background text-light-warn-color dark:bg-dark-warn-background dark:text-dark-warn-color px-2 py-0.5">
-                Theory: {theoryCourses.length}
-              </span>
-              <span className="text-xs rounded-full bg-light-success-background text-light-success-color dark:bg-dark-success-background dark:text-dark-success-color px-2 py-0.5">
-                Practical: {practicalCourses.length}
-              </span>
-            </div>
-          </div>
         </div>
-
-        {/* Attendance pie chart */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-light-background-light dark:bg-dark-background-light p-4 rounded-lg">
+        
+        {/* Overall attendance distribution */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Pie chart for overall attendance */}
+          <div>
             <h3 className="text-lg font-medium mb-4">Overall Attendance Distribution</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart onClick={(data) => data?.activePayload && handlePieClick(data.activePayload[0].payload)}>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    className="cursor-pointer"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={COLORS[index % COLORS.length]} 
-                        className={`${index === 0 ? "dark:fill-dark-success-color" : "dark:fill-dark-error-color"} cursor-pointer`} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.fill}
+                          className={index === 0 
+                            ? "dark:fill-dark-success-color" 
+                            : "dark:fill-dark-error-color"
+                          } 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex justify-center gap-6 mt-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-sm bg-light-success-color dark:bg-dark-success-color"></div>
+                  <p className="text-xs">Present ({totalPresent} hrs)</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-sm bg-light-error-color dark:bg-dark-error-color"></div>
+                  <p className="text-xs">Absent ({totalAbsent} hrs)</p>
+                </div>
+              </div>
             </div>
           </div>
           
-          {/* Attendance by course */}
-          <div className="bg-light-background-light dark:bg-dark-background-light p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-4">Attendance by Course</h3>
-            <div className="h-64 overflow-y-auto pr-2">
-              {attendanceData.map((course, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between mb-2 p-2 rounded-lg hover:bg-light-background-dark hover:dark:bg-dark-background-dark cursor-pointer"
-                  onClick={() => handleCourseClick(course)}
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{course.name}</p>
-                    <p className="text-xs text-light-accent dark:text-dark-accent">{course.category}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-24 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          Number(course.attendancePercentage) >= 75 
-                            ? "bg-light-success-color dark:bg-dark-success-color" 
-                            : "bg-light-error-color dark:bg-dark-error-color"
-                        }`}
-                        style={{ width: `${course.attendancePercentage}%` }}
-                      />
-                    </div>
-                    <span 
-                      className={`text-sm font-medium ${
-                        Number(course.attendancePercentage) >= 75 
-                          ? "text-light-success-color dark:text-dark-success-color" 
-                          : "text-light-error-color dark:text-dark-error-color"
-                      }`}
+          {/* Course attendance comparison */}
+          <div>
+            <h3 className="text-lg font-medium mb-4">Course Attendance Comparison</h3>
+            <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
+              <div className={`h-64 w-full ${mobileView === 'vertical' ? 'min-h-[400px]' : ''}`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    layout={mobileView === 'vertical' && window.innerWidth < 640 ? 'vertical' : 'horizontal'}
+                    margin={{ 
+                      top: 5, 
+                      right: 10, 
+                      left: mobileView === 'vertical' && window.innerWidth < 640 ? 60 : 0, 
+                      bottom: mobileView === 'horizontal' || window.innerWidth >= 640 ? 40 : 10 
+                    }}
+                    onClick={(data) => data?.activePayload && handleCourseClick(data.activePayload[0].payload)}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    {mobileView === 'vertical' && window.innerWidth < 640 ? (
+                      <>
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis 
+                          dataKey="courseCode" 
+                          type="category"
+                          width={50}
+                          tick={{ fontSize: 10 }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <XAxis 
+                          dataKey="courseCode" 
+                          angle={0}
+                          tick={{ fontSize: 10 }}
+                          interval={0}
+                        />
+                        <YAxis domain={[0, 100]} />
+                      </>
+                    )}
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend verticalAlign="top" height={36} />
+                    <Bar 
+                      name="Attendance %" 
+                      dataKey="attendancePercentage" 
+                      fill="var(--color-light-accent)" 
+                      className="dark:fill-dark-accent cursor-pointer"
+                      barSize={20}
                     >
-                      {course.attendancePercentage}%
-                    </span>
-                  </div>
-                </div>
-              ))}
+                      {chartData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.attendancePercentage >= 75 
+                            ? "var(--color-light-success-color)" 
+                            : "var(--color-light-error-color)"
+                          }
+                          className={entry.attendancePercentage >= 75 
+                            ? "dark:fill-dark-success-color cursor-pointer" 
+                            : "dark:fill-dark-error-color cursor-pointer"
+                          } 
+                        />
+                      ))}
+                    </Bar>
+                    {/* Attendance threshold line at 75% */}
+                    <line 
+                      x1={mobileView === 'vertical' ? '75' : '0'} 
+                      y1={mobileView === 'vertical' ? '0' : '75'} 
+                      x2={mobileView === 'vertical' ? '75' : '100%'}
+                      y2={mobileView === 'vertical' ? '100%' : '75'} 
+                      stroke="var(--color-light-warn-color)"
+                      strokeWidth={1.5}
+                      strokeDasharray="3 3"
+                      className="dark:stroke-dark-warn-color"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Course-wise attendance comparison */}
-        <div className="mt-8">
-          <h3 className="text-lg font-medium mb-4">Course-wise Attendance</h3>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={attendanceData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 60 }}
-                onClick={(data) => data?.activePayload && handleCourseClick(data.activePayload[0].payload)}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis 
-                  dataKey="name" 
-                  angle={-45} 
-                  textAnchor="end"
-                  tick={{ fontSize: 12 }}
-                  height={80}
-                  tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
-                />
-                <YAxis 
-                  domain={[0, 100]} 
-                  label={{ 
-                    value: 'Attendance %', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { textAnchor: 'middle' } 
-                  }} 
-                />
-                <Tooltip content={<AttendanceTooltip />} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="attendancePercentage" 
-                  name="Attendance %" 
-                  stroke="var(--color-light-accent)"
-                  className="dark:stroke-dark-accent cursor-pointer"
-                  strokeWidth={2} 
-                  dot={{
-                    fill: "var(--color-light-accent)",
-                    className: "dark:fill-dark-accent cursor-pointer",
-                    r: 5
-                  }}
-                  activeDot={{
-                    fill: "var(--color-light-accent)",
-                    r: 7,
-                    stroke: "var(--color-light-background-light)",
-                    className: "dark:stroke-dark-background-normal dark:fill-dark-accent cursor-pointer",
-                    strokeWidth: 2
-                  }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Detailed Course Modal */}
+        {/* Detailed Course Modal - Mobile optimized */}
         {selectedCourse && (
-          <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
-              <div className="p-6">
+          <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-2">
+            <div className="bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-auto">
+              <div className="p-4 sm:p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold">{selectedCourse.name}</h3>
-                    <p className="text-sm text-light-accent dark:text-dark-accent">{selectedCourse.courseCode} ({selectedCourse.category})</p>
+                    <h3 className="text-lg sm:text-xl font-semibold">{selectedCourse.courseTitle || selectedCourse.courseCode}</h3>
+                    <p className="text-xs sm:text-sm text-light-accent dark:text-dark-accent">
+                      {selectedCourse.courseCode} • {selectedCourse.slot}
+                    </p>
                   </div>
                   <button 
                     onClick={() => setSelectedCourse(null)}
                     className="text-light-color/60 dark:text-dark-color/60 hover:text-light-accent hover:dark:text-dark-accent"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
                       <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                   </button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Present</h4>
-                    <p className="text-2xl font-semibold text-light-success-color dark:text-dark-success-color">
-                      {selectedCourse.present}
-                      <span className="text-sm text-light-color/60 dark:text-dark-color/60 ml-1">hrs</span>
+                <div className="mb-4 sm:mb-6">
+                  <p className="text-sm mb-1">Faculty: <span className="font-medium">{selectedCourse.facultyName}</span></p>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 flex flex-col items-center justify-center">
+                    <h4 className="text-xs font-medium text-light-accent dark:text-dark-accent mb-1">Hours Present</h4>
+                    <p className="text-xl font-semibold text-light-success-color dark:text-dark-success-color">
+                      {selectedCourse.hoursPresent}
                     </p>
                   </div>
                   
-                  <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Absent</h4>
-                    <p className="text-2xl font-semibold text-light-error-color dark:text-dark-error-color">
-                      {selectedCourse.absent}
-                      <span className="text-sm text-light-color/60 dark:text-dark-color/60 ml-1">hrs</span>
+                  <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 flex flex-col items-center justify-center">
+                    <h4 className="text-xs font-medium text-light-accent dark:text-dark-accent mb-1">Hours Absent</h4>
+                    <p className="text-xl font-semibold text-light-error-color dark:text-dark-error-color">
+                      {selectedCourse.hoursAbsent}
                     </p>
                   </div>
                   
-                  <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">Attendance</h4>
-                    <p className={`text-2xl font-semibold ${
-                      Number(selectedCourse.attendancePercentage) >= 75 
+                  <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 flex flex-col items-center justify-center">
+                    <h4 className="text-xs font-medium text-light-accent dark:text-dark-accent mb-1">Attendance %</h4>
+                    <p className={`text-xl font-semibold ${
+                      selectedCourse.attendancePercentage >= 75
                         ? "text-light-success-color dark:text-dark-success-color" 
                         : "text-light-error-color dark:text-dark-error-color"
                     }`}>
-                      {selectedCourse.attendancePercentage}%
+                      {selectedCourse.attendancePercentage.toFixed(1)}%
                     </p>
                   </div>
                 </div>
                 
-                {/* Visual representation of attendance */}
-                <div className="mt-6">
-                  <h4 className="text-lg font-medium mb-3">Attendance Overview</h4>
-                  <div className="bg-light-background-light dark:bg-dark-background-light p-4 rounded-lg">
-                    <div className="h-8 w-full bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          Number(selectedCourse.attendancePercentage) >= 75 
-                            ? "bg-light-success-color dark:bg-dark-success-color" 
-                            : "bg-light-error-color dark:bg-dark-error-color"
-                        }`}
-                        style={{ width: `${selectedCourse.attendancePercentage}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between mt-2 text-sm">
-                      <span>Total Hours: {selectedCourse.total}</span>
-                      <span>
-                        Required for 75%: {Math.ceil(selectedCourse.total * 0.75)} hrs
-                        {Number(selectedCourse.attendancePercentage) < 75 && (
-                          <span className="ml-2 text-light-error-color dark:text-dark-error-color">
-                            (Need {Math.ceil(selectedCourse.total * 0.75) - selectedCourse.present} more hrs)
-                          </span>
-                        )}
-                      </span>
-                    </div>
+                <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 sm:p-4 mb-6">
+                  <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-3">Attendance Gauge</h4>
+                  <div className="h-40 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadialBarChart 
+                        cx="50%" 
+                        cy="50%" 
+                        innerRadius="40%" 
+                        outerRadius="100%" 
+                        barSize={14} 
+                        data={[
+                          {
+                            name: 'Attendance',
+                            value: selectedCourse.attendancePercentage,
+                            fill: selectedCourse.attendancePercentage >= 75 
+                              ? "var(--color-light-success-color)" 
+                              : "var(--color-light-error-color)",
+                            className: selectedCourse.attendancePercentage >= 75 
+                              ? "dark:fill-dark-success-color" 
+                              : "dark:fill-dark-error-color"
+                          }
+                        ]}
+                        startAngle={180} 
+                        endAngle={0}
+                      >
+                        <RadialBar
+                          background
+                          dataKey="value"
+                          cornerRadius={10}
+                        />
+                        {/* Custom label element for percentage display */}
+                        <g>
+                          <text
+                            x="50%"
+                            y="50%"
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            style={{ 
+                              fill: 'currentColor',
+                              fontSize: '18px',
+                              fontWeight: 600 
+                            }}
+                          >
+                            {selectedCourse.attendancePercentage.toFixed(1)}%
+                          </text>
+                        </g>
+                      </RadialBarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
                 
-                {/* Additional attendance details if available */}
-                {selectedCourse.attendanceData && (
-                  <div className="mt-6">
-                    <h4 className="text-lg font-medium mb-3">Course Details</h4>
-                    <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg overflow-hidden">
-                      <table className="w-full">
-                        <tbody>
-                          {selectedCourse.attendanceData.facultyName && (
-                            <tr className="border-b border-light-button/20 dark:border-dark-button/20">
-                              <td className="p-3 font-medium">Faculty</td>
-                              <td className="p-3">{selectedCourse.attendanceData.facultyName}</td>
-                            </tr>
-                          )}
-                          {selectedCourse.attendanceData.slot && (
-                            <tr className="border-b border-light-button/20 dark:border-dark-button/20">
-                              <td className="p-3 font-medium">Slot</td>
-                              <td className="p-3">{selectedCourse.attendanceData.slot}</td>
-                            </tr>
-                          )}
-                          {selectedCourse.attendanceData.courseTitle && (
-                            <tr>
-                              <td className="p-3 font-medium">Course Title</td>
-                              <td className="p-3">{selectedCourse.attendanceData.courseTitle}</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                {selectedCourse.attendancePercentage < 75 && (
+                  <div className="bg-light-error-background dark:bg-dark-error-background p-3 rounded-lg mb-6">
+                    <div className="flex gap-2 items-center text-light-error-color dark:text-dark-error-color">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <p className="text-sm font-medium">Attendance Warning</p>
                     </div>
+                    <p className="text-xs mt-1 text-light-error-color dark:text-dark-error-color">
+                      Your attendance is below the required 75%. Consider attending classes more regularly to meet the minimum requirement.
+                    </p>
                   </div>
                 )}
                 
-                <div className="mt-8 flex justify-end">
+                {/* Calculate classes needed to reach 75% if below threshold */}
+                {selectedCourse.attendancePercentage < 75 && (
+                  <div className="bg-light-warn-background dark:bg-dark-warn-background p-3 rounded-lg mb-6">
+                    <div className="flex gap-2 items-center text-light-warn-color dark:text-dark-warn-color">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                      </svg>
+                      <p className="text-sm font-medium">Attendance Recovery Plan</p>
+                    </div>
+                    
+                    {(() => {
+                      // Calculate classes needed to reach 75%
+                      const totalClasses = selectedCourse.hoursConducted;
+                      const presentClasses = selectedCourse.hoursPresent;
+                      
+                      // Formula: (present + x) / (total + x) = 0.75
+                      // Solving for x: x = (0.75*total - present) / 0.25
+                      const classesNeeded = Math.ceil((0.75 * totalClasses - presentClasses) / 0.25);
+                      
+                      return (
+                        <p className="text-xs mt-1 text-light-warn-color dark:text-dark-warn-color">
+                          You need to attend the next <span className="font-semibold">{classesNeeded}</span> consecutive classes without any absence to reach the 75% attendance threshold.
+                        </p>
+                      );
+                    })()}
+                  </div>
+                )}
+                
+                <div className="mt-6 flex justify-end">
                   <button 
                     onClick={() => setSelectedCourse(null)}
-                    className="px-4 py-2 bg-light-button dark:bg-dark-button text-light-color dark:text-dark-color rounded-lg hover:bg-light-button/80 hover:dark:bg-dark-button/80 transition-colors"
+                    className="px-3 py-1.5 bg-light-button dark:bg-dark-button text-light-color dark:text-dark-color text-sm rounded-lg hover:bg-light-button/80 hover:dark:bg-dark-button/80 transition-colors"
                   >
                     Close
                   </button>
