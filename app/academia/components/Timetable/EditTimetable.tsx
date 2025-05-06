@@ -11,22 +11,25 @@ export default function EditTimetable({
 }: { timetable: Schedule[]; ophours: string[] }) {
 	const [isOpen, setIsOpen] = useState(false);
 	const editBox = useRef<HTMLDivElement>(null);
+	const [editBoxElement, setEditBoxElement] = useState<HTMLDivElement | null>(null);
 
 	useEffect(() => {
-		editBox.current = document.getElementById(
+		const editBoxEl = document.getElementById(
 			"edit-timetable",
-		) as HTMLDivElement;
+		) as HTMLDivElement | null;
+		
+		setEditBoxElement(editBoxEl);
 
 		return () => {
-			editBox.current = null;
+			setEditBoxElement(null);
 		};
 	}, []);
 
 	useEffect(() => {
-		if (isOpen && editBox.current) {
-			editBox.current.scrollIntoView({ behavior: "smooth" });
+		if (isOpen && editBoxElement) {
+			editBoxElement.scrollIntoView({ behavior: "smooth" });
 		}
-	}, [isOpen, editBox]);
+	}, [isOpen, editBoxElement]);
 
 	return (
 		<>
@@ -37,14 +40,14 @@ export default function EditTimetable({
 			>
 				<TbPencil className="text-lg text-light-accent dark:text-dark-accent cursor-pointer" />
 			</button>
-			{editBox.current &&
+			{editBoxElement &&
 				isOpen &&
 				createPortal(
 					<OptionalEditor
 						timetable={timetable}
 						ophours={ophours[ophours.length - 1] === "" ? [] : ophours}
 					/>,
-					editBox.current,
+					editBoxElement,
 				)}
 		</>
 	);
