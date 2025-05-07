@@ -278,6 +278,50 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
               />
             </div>
           </div>
+
+          {/* CGPA Overview */}
+          <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">CGPA Overview</h3>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-2xl sm:text-3xl font-semibold text-light-success-color dark:text-dark-success-color">
+                  {cgpaData.projectedRange}
+                </p>
+                <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">Projected CGPA Range</p>
+              </div>
+              <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">
+                Best Case: {cgpaData.bestCGPA}
+              </p>
+            </div>
+            <div className="mt-3 h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-light-success-color dark:bg-dark-success-color"
+                style={{ width: `${Math.min(parseFloat(cgpaData.midPointCGPA) * 10, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Optimistic CGPA Projection */}
+          <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">Optimistic CGPA Projection</h3>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-2xl sm:text-3xl font-semibold text-light-success-color dark:text-dark-success-color">
+                  {cgpaData.projectedRange}
+                </p>
+                <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">Best Case CGPA Range</p>
+              </div>
+              <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">
+                Best Case: {cgpaData.bestCGPA}
+              </p>
+            </div>
+            <div className="mt-3 h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-light-success-color dark:bg-dark-success-color"
+                style={{ width: `${Math.min(parseFloat(cgpaData.midPointCGPA) * 10, 100)}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>
