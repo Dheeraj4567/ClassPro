@@ -23,13 +23,15 @@ export default async function ViewAll() {
     const yesterday = getYesterday();
     const tomorrow = getTomorrow();
 
-    const yesterdayDayOrder = timetable.schedule.find(
+    const yesterdaySchedule = timetable.schedule.find(
         (day) => day.day === new Date(yesterday).getDay()
-    )?.dayOrder;
+    );
+    const yesterdayDayOrder = yesterdaySchedule ? yesterdaySchedule.day + 1 : "N/A";
 
-    const tomorrowDayOrder = timetable.schedule.find(
+    const tomorrowSchedule = timetable.schedule.find(
         (day) => day.day === new Date(tomorrow).getDay()
-    )?.dayOrder;
+    );
+    const tomorrowDayOrder = tomorrowSchedule ? tomorrowSchedule.day + 1 : "N/A";
 
     return (
         <main className='max-w-screen h-screen w-screen overflow-hidden flex items-center justify-center'>
