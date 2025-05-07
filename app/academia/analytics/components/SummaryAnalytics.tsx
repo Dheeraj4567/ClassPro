@@ -200,9 +200,8 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
   return (
     <section id="summary" className="w-full scroll-mt-20">
       <h2 className="text-2xl font-semibold pl-1">Performance Summary</h2>
-      
       <div className="my-4 p-3 sm:p-5 bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-sm">
-        {/* Performance Status - Improved for mobile */}
+        {/* Performance Status */}
         <div className="mb-4 sm:mb-6">
           <h3 className="text-lg font-medium mb-2">Overall Status</h3>
           <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
@@ -214,7 +213,7 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
           </div>
         </div>
 
-        {/* Key Metrics - Improved layout for mobile */}
+        {/* Key Metrics */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Marks */}
           <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
@@ -249,7 +248,7 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
               />
             </div>
           </div>
-          
+
           {/* Attendance */}
           <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
             <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">Attendance Overview</h3>
@@ -277,147 +276,6 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
                 }`}
                 style={{ width: `${Math.min(overallAttendancePercentage, 100)}%` }}
               />
-            </div>
-          </div>
-          
-          {/* Estimated CGPA - Mobile optimized */}
-          <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg sm:col-span-2 lg:col-span-1">
-            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">CGPA Estimation</h3>
-                </p>
-                <p className="text-sm font-medium">{cgpaData.projectedRange}</p>
-              </div>
-            </div>
-            <div className="mt-3 relative">
-              <div className="h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                {/* Current CGPA marker */}
-                <div 
-                  className={`h-full ${
-                    Number(cgpaData.cgpa) >= 8 
-                      ? "bg-light-success-color dark:bg-dark-success-color" 
-                      : Number(cgpaData.cgpa) >= 6 
-                        ? "bg-light-warn-color dark:bg-dark-warn-color" 
-                        : "bg-light-error-color dark:bg-dark-error-color"
-                  }`}
-                  style={{ width: `${Math.min((Number(cgpaData.cgpa) / 10) * 100, 100)}%` }}
-                />
-                {/* Projected range overlay */}
-                <div
-                  className="absolute top-0 h-2 bg-light-accent dark:bg-dark-accent opacity-50"
-                  style={{ 
-                    left: `${Math.min((Number(cgpaData.cgpa) / 10) * 100, 100)}%`, 
-                    width: `${((Number(cgpaData.bestCGPA) - Number(cgpaData.cgpa)) / 10) * 100}%` 
-                  }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-xs mt-1 text-light-color/50 dark:text-dark-color/50">
-                <span>0</span>
-                <span>5</span>
-                <span>10</span>
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded-lg bg-light-background-normal dark:bg-dark-background-normal p-2 text-center">
-                <p className="text-xs text-light-color/50 dark:text-dark-color/50">Average Case</p>
-                <p className="font-medium">{cgpaData.averageCGPA}</p>
-              </div>
-              <div className="rounded-lg bg-light-background-normal dark:bg-dark-background-normal p-2 text-center">
-                <p className="text-xs text-light-color/50 dark:text-dark-color/50">Best Case</p>
-                <p className="font-medium">{cgpaData.bestCGPA}</p>
-              </div>
-            </div>
-
-            <div className="mt-2 hidden sm:block">
-              <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">
-                Probability of achieving 80-100% marks: <span className="font-medium">{cgpaData.highScoreProbability}%</span>
-              </p>
-            </div>
-            
-            <div className="mt-2 p-2 bg-light-background-normal dark:bg-dark-background-normal rounded text-xs text-light-color/70 dark:text-dark-color/70 hidden sm:block">
-              <p>This is an estimate based on your current academic performance. The range shows potential outcomes from average to best-case scenarios.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Course Distribution - Improved for mobile */}
-        <div className="mt-6">
-          <h3 className="text-lg font-medium mb-2">Course Distribution</h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* By Category - Mobile optimized */}
-            <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-3">By Category</h4>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex flex-row sm:flex-col justify-center gap-4 sm:gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 sm:h-4 sm:w-4 rounded-sm bg-light-accent dark:bg-dark-accent"></div>
-                    <p className="text-xs sm:text-sm">Theory</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 sm:h-4 sm:w-4 rounded-sm bg-light-warn-color dark:bg-dark-warn-color"></div>
-                    <p className="text-xs sm:text-sm">Practical</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 sm:h-4 sm:w-4 rounded-sm bg-light-success-color dark:bg-dark-success-color"></div>
-                    <p className="text-xs sm:text-sm">Other</p>
-                  </div>
-                </div>
-                <div className="flex-1 h-28 sm:h-32 flex items-center justify-center">
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-8 border-light-accent dark:border-dark-accent relative">
-                    <div className="absolute inset-0 rounded-full border-t-8 border-r-8 border-light-warn-color dark:border-dark-warn-color rotate-45"></div>
-                    <div className="absolute inset-0 rounded-full border-l-8 border-b-8 border-light-success-color dark:border-dark-success-color -rotate-45"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* By Credit - Mobile optimized */}
-            <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-3">By Credit</h4>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs sm:text-sm">4 Credits</p>
-                  <p className="text-xs sm:text-sm font-medium">{courses.filter(c => Number(c.credit) === 4).length} Courses</p>
-                </div>
-                <div className="h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-light-success-color dark:bg-dark-success-color"
-                    style={{ width: `${(courses.filter(c => Number(c.credit) === 4).length / courses.length) * 100}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs sm:text-sm">3 Credits</p>
-                  <p className="text-xs sm:text-sm font-medium">{courses.filter(c => Number(c.credit) === 3).length} Courses</p>
-                </div>
-                <div className="h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-light-warn-color dark:bg-dark-warn-color"
-                    style={{ width: `${(courses.filter(c => Number(c.credit) === 3).length / courses.length) * 100}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs sm:text-sm">2 Credits</p>
-                  <p className="text-xs sm:text-sm font-medium">{courses.filter(c => Number(c.credit) === 2).length} Courses</p>
-                </div>
-                <div className="h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-light-accent dark:bg-dark-accent"
-                    style={{ width: `${(courses.filter(c => Number(c.credit) === 2).length / courses.length) * 100}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs sm:text-sm">1 Credit</p>
-                  <p className="text-xs sm:text-sm font-medium">{courses.filter(c => Number(c.credit) === 1).length} Courses</p>
-                </div>
-                <div className="h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-light-error-color dark:bg-dark-error-color"
-                    style={{ width: `${(courses.filter(c => Number(c.credit) === 1).length / courses.length) * 100}%` }}
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>

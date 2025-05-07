@@ -17,10 +17,13 @@ export default async function DayOrder({
 	let day = dayOrder;
 	
 	// Handle "DO-X" format
+	// Ensure dayOrder is a valid number or fallback to a default value
 	if (dayOrder?.includes("DO-") || dayOrder?.includes("-")) {
 		const parts = dayOrder.split("-");
-		if (parts.length === 2 && parts[1] && parts[1] !== "") {
+		if (parts.length === 2 && parts[1] && !isNaN(Number(parts[1]))) {
 			day = parts[1]; // Extract the number after the hyphen
+		} else {
+			day = "1"; // Fallback to a default day order if parsing fails
 		}
 	}
 	
@@ -51,8 +54,10 @@ export default async function DayOrder({
 			// If found in calendar, use that day order for consistency
 			if (currentDayData && currentDayData.dayOrder) {
 				// Only update if it's not a holiday indicator
-				if (currentDayData.dayOrder !== "-") {
+				if (currentDayData.dayOrder !== "-" && !isNaN(Number(currentDayData.dayOrder))) {
 					day = currentDayData.dayOrder;
+				} else {
+					day = "1"; // Fallback to a default day order if invalid
 				}
 			}
 		}
