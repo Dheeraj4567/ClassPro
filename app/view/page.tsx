@@ -24,11 +24,11 @@ export default async function ViewAll() {
     const tomorrow = getTomorrow();
 
     const yesterdayDayOrder = timetable.schedule.find(
-        (day) => day.date === yesterday
+        (day) => day.day === new Date(yesterday).getDay()
     )?.dayOrder;
 
     const tomorrowDayOrder = timetable.schedule.find(
-        (day) => day.date === tomorrow
+        (day) => day.day === new Date(tomorrow).getDay()
     )?.dayOrder;
 
     return (
