@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, PieChart, Pie, Cell, RadialBarChart, RadialBar } from 'recharts';
-import CGPAEstimator from "./CGPAEstimator";
 
 interface AttendanceAnalyticsProps {
   attendance?: AttendanceCourse[];
@@ -158,12 +157,6 @@ const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = 
                 <p className="text-xs text-center mt-1">All courses above 75% 👏</p>
               </div>
             )}
-          </div>
-
-          {/* Add CGPA Estimator */}
-          <div className="bg-light-background-light dark:bg-dark-background-light rounded-lg p-3 sm:p-4 flex flex-col items-center justify-center">
-            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-1">CGPA Estimator</h3>
-            <CGPAEstimator />
           </div>
         </div>
         

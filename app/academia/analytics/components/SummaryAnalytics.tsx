@@ -301,15 +301,15 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
             </div>
           </div>
 
-          {/* Optimistic CGPA Projection */}
+          {/* CGPA Prediction */}
           <div className="bg-light-background-light dark:bg-dark-background-light p-3 sm:p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">Optimistic CGPA Projection</h3>
+            <h3 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-2">CGPA Prediction</h3>
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-2xl sm:text-3xl font-semibold text-light-success-color dark:text-dark-success-color">
-                  {cgpaData.projectedRange}
+                  {cgpaData.averageCGPA} - {cgpaData.bestCGPA}
                 </p>
-                <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">Best Case CGPA Range</p>
+                <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">Above Average - Best Case CGPA Prediction</p>
               </div>
               <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">
                 Best Case: {cgpaData.bestCGPA}
