@@ -289,9 +289,6 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
                 </p>
                 <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">Below Average - Above Average CGPA Prediction</p>
               </div>
-              <p className="text-xs sm:text-sm text-light-color/60 dark:text-dark-color/60">
-                Best Case: {cgpaData.bestCGPA}
-              </p>
             </div>
             <div className="mt-3 h-2 bg-light-background-dark dark:bg-dark-background-dark rounded-full overflow-hidden">
               <div 
