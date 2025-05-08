@@ -87,10 +87,10 @@ export default async function DayOrder({
 				</span>
 			) : (
 				<span
-					title={`Day Order: ${day}`}
+					title={`Day: ${day}`}
 					className={`${mini ? "flex h-6 w-2 items-center justify-center text-sm" : "text-base"} font-medium text-light-accent dark:text-dark-accent`}
 				>
-					{mini ? "" : "Day Order: "}
+					{mini ? "" : "Day: "}
 					{day}
 				</span>
 			)}
