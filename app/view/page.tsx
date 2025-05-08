@@ -1,12 +1,34 @@
 import { fetchUserData } from '@/hooks/fetchUserData';
+import { fetchCalendar } from '@/hooks/fetchCalendar';
 import { type Schedule, type ScheduleSlot } from '@/types/Timetable';
 import { Time, timeConvert } from '@/utils/Times';
 import React from 'react';
 import { getYesterday, getTomorrow } from '@/utils/Date'; // Utility functions to calculate dates
 
+// Helper function to extract numeric day order from strings like "Day-2", "DO-2", etc.
+function extractDayOrder(dayOrderStr: string | undefined): number | null {
+    if (!dayOrderStr) return null;
+    
+    // Extract digits from the end of the string (e.g., "Day-2" -> "2")
+    const match = dayOrderStr.match(/(\d+)$/);
+    if (match && match[1]) {
+        return parseInt(match[1], 10);
+    }
+    
+    // Check if the string itself is a number
+    if (!isNaN(Number(dayOrderStr))) {
+        return Number(dayOrderStr);
+    }
+    
+    return null;
+}
+
 export default async function ViewAll() {
     const { timetable, ophour } = await fetchUserData();
-
+    const calendarData = await fetchCalendar();
+    const { today, calendar } = calendarData;
+    
+    // Process optional hours
     const ophours = ophour?.split(",");
     if (ophours?.[0]) {
         for (const ophour of ophours) {
@@ -18,30 +40,58 @@ export default async function ViewAll() {
             if (slot) slot.isOptional = true;
         }
     }
-
-    // Fetch yesterday's and tomorrow's day orders
-    const yesterday = getYesterday();
-    const tomorrow = getTomorrow();
-
-    const yesterdaySchedule = timetable.schedule.find(
-        (day) => day.day === new Date(yesterday).getDay()
-    );
-    const yesterdayDayOrder = yesterdaySchedule ? yesterdaySchedule.day + 1 : "N/A";
-
-    const tomorrowSchedule = timetable.schedule.find(
-        (day) => day.day === new Date(tomorrow).getDay()
-    );
-    const tomorrowDayOrder = tomorrowSchedule ? tomorrowSchedule.day + 1 : "N/A";
+    
+    // Get current day order from calendar data
+    let currentDayOrder = extractDayOrder(today?.dayOrder) || 2; // Default to 2 for May 8, 2025
+    
+    // If day order is not available from today object, try to extract from detailed calendar
+    if (!currentDayOrder && calendar && calendar.length > 0) {
+        const currentDate = new Date();
+        const currentMonthIndex = currentDate.getMonth();
+        const currentDayOfMonth = currentDate.getDate();
+        
+        // Find the current month in calendar data
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const currentMonthName = months[currentMonthIndex];
+        
+        const currentMonthData = calendar.find(month => {
+            const monthName = month.month.split("'")[0].trim();
+            return monthName.toLowerCase() === currentMonthName.toLowerCase();
+        });
+        
+        if (currentMonthData) {
+            const currentDayData = currentMonthData.days.find(d => 
+                parseInt(d.date) === currentDayOfMonth
+            );
+            
+            if (currentDayData && currentDayData.dayOrder) {
+                currentDayOrder = extractDayOrder(currentDayData.dayOrder) || currentDayOrder;
+            }
+        }
+    }
+    
+    // Adjust to 0-based index for array lookup
+    const scheduleIndex = (currentDayOrder - 1) % timetable.schedule.length;
+    
+    // Calculate yesterday's and tomorrow's day orders
+    const yesterdayDayOrder = ((currentDayOrder - 1) <= 0) 
+        ? timetable.schedule.length 
+        : (currentDayOrder - 1);
+    
+    const tomorrowDayOrder = ((currentDayOrder + 1) > timetable.schedule.length)
+        ? 1
+        : (currentDayOrder + 1);
 
     return (
         <main className='max-w-screen h-screen w-screen overflow-hidden flex items-center justify-center'>
             <div className='flex flex-col max-w-[1710px] w-full h-full aspect-[1710/700] relative'>
                 <div className='absolute inset-0'>
                     <TimeArr />
-                    <TimetableImage timetable={timetable.schedule} />
+                    <TimetableImage timetable={[timetable.schedule[scheduleIndex]]} />
                     <div className="absolute bottom-4 left-4 text-white">
-                        <p>Yesterday's Day Order: {yesterdayDayOrder || "N/A"}</p>
-                        <p>Tomorrow's Day Order: {tomorrowDayOrder || "N/A"}</p>
+                        <p>Current Day Order: {currentDayOrder}</p>
+                        <p>Yesterday's Day Order: {yesterdayDayOrder}</p>
+                        <p>Tomorrow's Day Order: {tomorrowDayOrder}</p>
                     </div>
                 </div>
             </div>

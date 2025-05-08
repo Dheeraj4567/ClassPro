@@ -3,15 +3,28 @@ import React from "react";
 
 // Helper function to parse various day order string formats
 const parseDayOrderStatus = (dayOrderStr: string | undefined): string => {
-	if (!dayOrderStr) return "1"; // Default for undefined or empty string
+	// Default for undefined, null, or empty/whitespace string
+	if (!dayOrderStr || dayOrderStr.trim() === "") {
+		return "1";
+	}
 
-	const lowerDayOrderStr = dayOrderStr.toLowerCase();
-	if (lowerDayOrderStr === "holiday" || dayOrderStr === "-") {
+	const trimmedDayOrderStr = dayOrderStr.trim();
+	const lowerTrimmedDayOrderStr = trimmedDayOrderStr.toLowerCase();
+
+	// Explicit holiday markers
+	if (lowerTrimmedDayOrderStr === "holiday" || trimmedDayOrderStr === "-") {
+		return "Holiday";
+	}
+
+	// If the string contains "---" or "null", treat as holiday or non-operational day
+	if (trimmedDayOrderStr.includes("---") || 
+	    trimmedDayOrderStr.includes("null") ||
+	    trimmedDayOrderStr.includes("undefined")) {
 		return "Holiday";
 	}
 
 	// Extracts trailing digits, e.g., "2" from "Day-2", "DO-2", or "Order 2"
-	const match = dayOrderStr.match(/(\d+)$/);
+	const match = trimmedDayOrderStr.match(/(\d+)$/);
 	if (match && match[1]) {
 		const numStr = match[1];
 		// Ensure it's a simple number string after extraction
@@ -20,12 +33,15 @@ const parseDayOrderStatus = (dayOrderStr: string | undefined): string => {
 		}
 	}
 
-	// If the string itself is a number
-	if (!isNaN(Number(dayOrderStr))) {
-		return dayOrderStr;
+	// If the string itself is a number (e.g., "1", "2")
+	// Ensure it's not an empty string, which Number("") treats as 0.
+	// The initial check `dayOrderStr.trim() === ""` handles empty strings.
+	if (!isNaN(Number(trimmedDayOrderStr))) {
+		return trimmedDayOrderStr;
 	}
 
-	// Fallback for unparseable formats like "Day Order ---" or other non-numeric, non-holiday text
+	// Fallback for other unparseable formats
+	console.log('Unparseable day order:', dayOrderStr);
 	return "1";
 };
 
@@ -67,18 +83,24 @@ export default async function DayOrder({
 		}
 	}
 
-	// 2. If not found or inconclusive (i.e., resulted in "1") from specific calendar data, try `today.dayOrder`
-	if (!determinedDayOrder || determinedDayOrder === "1") {
+	// 2. If not found or inconclusive (e.g., resulted in "1" or "Holiday" but today.dayOrder might be more specific numeric)
+	//    from specific calendar data, try `today.dayOrder`.
+	//    Prioritize a numeric day order from `today.dayOrder` if `determinedDayOrder` is not already a specific number.
+	if (!determinedDayOrder || determinedDayOrder === "1" || determinedDayOrder === "Holiday") {
 		if (today?.dayOrder) {
 			const dayOrderFromTodayObject = parseDayOrderStatus(today.dayOrder);
-			// Use today.dayOrder if it's more specific than "1", or if calendar data wasn't found at all
-			if (dayOrderFromTodayObject !== "1" || !determinedDayOrder) {
+			// If today.dayOrder gives a specific number, it might be more accurate or an override
+			if (dayOrderFromTodayObject !== "Holiday" && dayOrderFromTodayObject !== "1") {
+				determinedDayOrder = dayOrderFromTodayObject;
+			} else if (!determinedDayOrder || determinedDayOrder === "1") {
+				// If determinedDayOrder was not set, or was "1", accept today.dayOrder's value (which could be "1" or "Holiday")
 				determinedDayOrder = dayOrderFromTodayObject;
 			}
+			// If determinedDayOrder was "Holiday", and today.dayOrder is also "Holiday" or "1", determinedDayOrder remains "Holiday".
 		}
 	}
 
-	// 3. Default to "1" if still not determined or remains "1" from parsing
+	// 3. Default to "1" if still not determined (should be rare after the above)
 	if (!determinedDayOrder) {
 		determinedDayOrder = "1";
 	}
