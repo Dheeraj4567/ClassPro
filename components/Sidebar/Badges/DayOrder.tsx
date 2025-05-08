@@ -1,6 +1,34 @@
 import { fetchCalendar } from "@/hooks/fetchCalendar";
 import React from "react";
 
+// Helper function to parse various day order string formats
+const parseDayOrderStatus = (dayOrderStr: string | undefined): string => {
+	if (!dayOrderStr) return "1"; // Default for undefined or empty string
+
+	const lowerDayOrderStr = dayOrderStr.toLowerCase();
+	if (lowerDayOrderStr === "holiday" || dayOrderStr === "-") {
+		return "Holiday";
+	}
+
+	// Extracts trailing digits, e.g., "2" from "Day-2", "DO-2", or "Order 2"
+	const match = dayOrderStr.match(/(\d+)$/);
+	if (match && match[1]) {
+		const numStr = match[1];
+		// Ensure it's a simple number string after extraction
+		if (!isNaN(Number(numStr))) {
+			return numStr;
+		}
+	}
+
+	// If the string itself is a number
+	if (!isNaN(Number(dayOrderStr))) {
+		return dayOrderStr;
+	}
+
+	// Fallback for unparseable formats like "Day Order ---" or other non-numeric, non-holiday text
+	return "1";
+};
+
 export default async function DayOrder({
 	mini,
 	...props
@@ -8,63 +36,56 @@ export default async function DayOrder({
 	mini?: boolean;
 	className?: string;
 }) {
-	// Get the complete calendar data to ensure consistency
 	const calendarData = await fetchCalendar();
 	const { today, calendar } = calendarData;
 
-	// First approach: Extract day order from the format (e.g., "DO-5" → "5")
-	let dayOrder = today?.dayOrder;
-	let day = dayOrder;
-	
-	// Handle "DO-X" format
-	// Ensure dayOrder is a valid number or fallback to a default value
-	if (dayOrder?.includes("DO-") || dayOrder?.includes("-")) {
-		const parts = dayOrder.split("-");
-		if (parts.length === 2 && parts[1] && !isNaN(Number(parts[1]))) {
-			day = parts[1]; // Extract the number after the hyphen
-		} else {
-			day = "1"; // Fallback to a default day order if parsing fails
-		}
-	}
-	
-	// Double-check against calendar data for current date
-	// This ensures consistency with what's displayed in the calendar page
+	let determinedDayOrder: string | null = null;
+
+	// 1. Try to get day order from the detailed calendar data for today
 	if (calendar && calendar.length > 0) {
 		const currentDate = new Date();
-		const currentMonth = currentDate.getMonth();
-		const currentDay = currentDate.getDate();
-		
-		// Find the current month in calendar data
+		const currentMonthIndex = currentDate.getMonth();
+		const currentDayOfMonth = currentDate.getDate();
+
 		const currentMonthData = calendar.find(month => {
-			// Extract month name from calendar data format (e.g., "May '24")
-			const monthName = month.month.split("'")[0].trim();
-			const monthIndex = [
-				"January", "February", "March", "April", "May", "June",
-				"July", "August", "September", "October", "November", "December"
-			].indexOf(monthName);
-			return monthIndex === currentMonth;
+			const monthName = month.month.split("'")[0].trim().toLowerCase();
+			const monthMap: { [key: string]: number } = {
+				"january": 0, "february": 1, "march": 2, "april": 3, "may": 4, "june": 5,
+				"july": 6, "august": 7, "september": 8, "october": 9, "november": 10, "december": 11
+			};
+			return monthMap[monthName] === currentMonthIndex;
 		});
-		
+
 		if (currentMonthData) {
-			// Find the current day in the month data
-			const currentDayData = currentMonthData.days.find(d => 
-				parseInt(d.date) === currentDay
+			const currentDayData = currentMonthData.days.find(d =>
+				parseInt(d.date) === currentDayOfMonth
 			);
-			
-			// If found in calendar, use that day order for consistency
-			if (currentDayData && currentDayData.dayOrder) {
-				// Only update if it's not a holiday indicator
-				if (currentDayData.dayOrder !== "-" && !isNaN(Number(currentDayData.dayOrder))) {
-					day = currentDayData.dayOrder;
-				} else {
-					day = "1"; // Fallback to a default day order if invalid
-				}
+
+			if (currentDayData && typeof currentDayData.dayOrder === 'string') {
+				determinedDayOrder = parseDayOrderStatus(currentDayData.dayOrder);
 			}
 		}
 	}
-	
-	// Final determination if it's a holiday
-	const isHoliday = !day || day === "-";
+
+	// 2. If not found or inconclusive (i.e., resulted in "1") from specific calendar data, try `today.dayOrder`
+	if (!determinedDayOrder || determinedDayOrder === "1") {
+		if (today?.dayOrder) {
+			const dayOrderFromTodayObject = parseDayOrderStatus(today.dayOrder);
+			// Use today.dayOrder if it's more specific than "1", or if calendar data wasn't found at all
+			if (dayOrderFromTodayObject !== "1" || !determinedDayOrder) {
+				determinedDayOrder = dayOrderFromTodayObject;
+			}
+		}
+	}
+
+	// 3. Default to "1" if still not determined or remains "1" from parsing
+	if (!determinedDayOrder) {
+		determinedDayOrder = "1";
+	}
+
+	const isHoliday = determinedDayOrder === "Holiday";
+	// displayDay will be the number string (e.g., "2") or "1" if not a holiday.
+	const displayDay = isHoliday ? "Holiday" : determinedDayOrder;
 
 	return (
 		<div
@@ -87,11 +108,11 @@ export default async function DayOrder({
 				</span>
 			) : (
 				<span
-					title={`Day: ${day}`}
+					title={`Day: ${displayDay}`}
 					className={`${mini ? "flex h-6 w-2 items-center justify-center text-sm" : "text-base"} font-medium text-light-accent dark:text-dark-accent`}
 				>
 					{mini ? "" : "Day: "}
-					{day}
+					{displayDay}
 				</span>
 			)}
 		</div>
