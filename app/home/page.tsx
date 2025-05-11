@@ -1,3 +1,5 @@
+"use client";
+
 import { Link } from "next-view-transitions";
 import { FaBookOpen } from "react-icons/fa";
 import ThemeToggle from "@/components/themes/ThemeToggle";
@@ -6,11 +8,15 @@ import { VscMegaphone } from "react-icons/vsc";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-export default async function Academia() {
-	const cookie = (await cookies()).get("key");
+export default function Academia() {
 	const [message, setMessage] = useState("");
+	const [cookie, setCookie] = useState<string | undefined>(undefined);
 
 	useEffect(() => {
+		cookies().then((cookieStore) => {
+			setCookie(cookieStore.get("key")?.value);
+		});
+
 		const today = new Date();
 		const cutoffDate = new Date("2025-05-23");
 		if (today <= cutoffDate) {
@@ -70,7 +76,7 @@ export default async function Academia() {
 				View, predict, and strategize your success.
 			</p>
 			<div className="flex gap-3 items-center justify-center mt-8">
-				{cookie?.value ? (
+				{cookie ? (
 					<Link
 						href="/academia"
 						className="text-md flex w-auto transform items-center justify-center rounded-2xl border-2 border-transparent bg-light-accent px-5 py-2 text-lg font-semibold text-light-background-light transition-all duration-150  dark:bg-dark-accent dark:text-dark-background-darker hover:opacity-80"
