@@ -4,9 +4,22 @@ import ThemeToggle from "@/components/themes/ThemeToggle";
 import { cookies } from "next/headers";
 import { VscMegaphone } from "react-icons/vsc";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default async function Academia() {
 	const cookie = (await cookies()).get("key");
+	const [message, setMessage] = useState("");
+
+	useEffect(() => {
+		const today = new Date();
+		const cutoffDate = new Date("2025-05-23");
+		if (today <= cutoffDate) {
+			setMessage("End Sems");
+		} else {
+			setMessage("Holiday");
+		}
+	}, []);
+
 	return (
 		<main className="flex relative flex-col items-center justify-start gap-4 bg-light-background-normal p-4 pt-24 dark:bg-dark-background-dark w-screen h-screen overflow-hidden">
 			<div className="flex absolute top-4 left-0 w-screen justify-between px-4 pl-8">
@@ -51,9 +64,7 @@ export default async function Academia() {
 			</Link>
 
 			<h1 className="md:text-6xl text-4xl md:max-w-3xl max-w-md mx-2 text-center font-semibold text-light-color dark:text-dark-color">
-				Better way to manage
-				<br />
-				your academics.
+				{message}
 			</h1>
 			<p className="text-xl font-medium text-center opacity-70 text-light-color dark:text-dark-color">
 				View, predict, and strategize your success.
