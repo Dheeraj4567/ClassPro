@@ -5,30 +5,8 @@ import { FaBookOpen } from "react-icons/fa";
 import ThemeToggle from "@/components/themes/ThemeToggle";
 import { VscMegaphone } from "react-icons/vsc";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 
 export default function Academia() {
-	const [message, setMessage] = useState("");
-	const [cookie, setCookie] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Check for cookies in the client-side
-		const cookieValue = document.cookie
-			.split('; ')
-			.find(row => row.startsWith('key='))
-			?.split('=')[1];
-		
-		setCookie(cookieValue);
-
-		const today = new Date();
-		const cutoffDate = new Date("2025-05-23");
-		if (today <= cutoffDate) {
-			setMessage("End Sems");
-		} else {
-			setMessage("Holiday");
-		}
-	}, []);
-
 	return (
 		<main className="flex relative flex-col items-center justify-start gap-4 bg-light-background-normal p-4 pt-24 dark:bg-dark-background-dark w-screen h-screen overflow-hidden">
 			<div className="flex absolute top-4 left-0 w-screen justify-between px-4 pl-8">
@@ -73,27 +51,20 @@ export default function Academia() {
 			</Link>
 
 			<h1 className="md:text-6xl text-4xl md:max-w-3xl max-w-md mx-2 text-center font-semibold text-light-color dark:text-dark-color">
-				{message}
+				Better way to manage
+				<br />
+				your academics.
 			</h1>
 			<p className="text-xl font-medium text-center opacity-70 text-light-color dark:text-dark-color">
 				View, predict, and strategize your success.
 			</p>
 			<div className="flex gap-3 items-center justify-center mt-8">
-				{cookie ? (
-					<Link
-						href="/academia"
-						className="text-md flex w-auto transform items-center justify-center rounded-2xl border-2 border-transparent bg-light-accent px-5 py-2 text-lg font-semibold text-light-background-light transition-all duration-150  dark:bg-dark-accent dark:text-dark-background-darker hover:opacity-80"
-					>
-						Dashboard
-					</Link>
-				) : (
-					<Link
-						href="/auth/login"
-						className="text-md flex w-auto transform items-center justify-center rounded-2xl border-2 border-transparent bg-light-accent px-5 py-2 text-lg font-semibold text-light-background-light transition-all duration-150  dark:bg-dark-accent dark:text-dark-background-darker hover:opacity-80"
-					>
-						Login
-					</Link>
-				)}
+				<Link
+					href="/auth/login"
+					className="text-md flex w-auto transform items-center justify-center rounded-2xl border-2 border-transparent bg-light-accent px-5 py-2 text-lg font-semibold text-light-background-light transition-all duration-150  dark:bg-dark-accent dark:text-dark-background-darker hover:opacity-80"
+				>
+					Login
+				</Link>
 				<Link
 					href="https://academia.srmist.edu.in"
 					className="text-md flex w-auto transform items-center justify-center rounded-2xl border-2 border-light-accent px-5 py-2 text-lg font-semibold text-light-accent dark:text-dark-accent transition-all duration-150 dark:border-dark-accent"
