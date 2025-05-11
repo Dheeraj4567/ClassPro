@@ -3,7 +3,6 @@
 import { Link } from "next-view-transitions";
 import { FaBookOpen } from "react-icons/fa";
 import ThemeToggle from "@/components/themes/ThemeToggle";
-import { cookies } from "next/headers";
 import { VscMegaphone } from "react-icons/vsc";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -13,9 +12,13 @@ export default function Academia() {
 	const [cookie, setCookie] = useState<string | undefined>(undefined);
 
 	useEffect(() => {
-		cookies().then((cookieStore) => {
-			setCookie(cookieStore.get("key")?.value);
-		});
+		// Check for cookies in the client-side
+		const cookieValue = document.cookie
+			.split('; ')
+			.find(row => row.startsWith('key='))
+			?.split('=')[1];
+		
+		setCookie(cookieValue);
 
 		const today = new Date();
 		const cutoffDate = new Date("2025-05-23");
