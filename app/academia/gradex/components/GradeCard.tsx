@@ -6,6 +6,7 @@ import { getGrade } from "@/types/Grade";
 import { Course } from "@/types/Course";
 import { MarkDisplay } from "../../components/Marks/Card/MarkElement";
 import { determineGrade, gradePoints as sgpaGradePoints } from "@/utils/Grade";
+import { lightHaptics, mediumHaptics } from "@/utils/haptics";
 
 // Grade point values for scoring calculation - moved outside component to prevent recreation
 export const grade_points: { [key: string]: number } = {
@@ -87,6 +88,12 @@ const GradeCard = memo(function GradeCard({
         courses?.find((a) => a.code === mark.courseCode),
         [courses, mark.courseCode]
     );
+    
+    // Toggle edit mode with haptic feedback
+    const toggleEditMode = () => {
+        lightHaptics();
+        setEditMode(prev => !prev);
+    };
 
     // Calculate required marks whenever relevant data changes
     useEffect(() => {
@@ -124,18 +131,17 @@ const GradeCard = memo(function GradeCard({
         return entry ? entry[0] : "5";
     };
 
-    // Handle slider change with vibration feedback
+    // Handle slider change with improved haptic feedback
     const handleSliderChange = (value: number[]) => {
-        if (navigator.vibrate && typeof navigator.vibrate === 'function') {
-            navigator.vibrate(40);
-        }
-
+        mediumHaptics(); // Use our utility for consistent haptic feedback
+        
         const newGrade = gradeMap[value[0]];
         updateGrade(mark.courseCode, newGrade);
     };
 
     // Toggle course exclusion
     const handleExcludeToggle = () => {
+        mediumHaptics(); // Add haptic feedback on course exclusion toggle
         updateGrade(mark.courseCode, currentGrade, true);
     };
 
@@ -197,9 +203,11 @@ const GradeCard = memo(function GradeCard({
                                             value >= 0 &&
                                             value <= 60 - Number(mark.overall.total)
                                         ) {
+                                            lightHaptics(); // Add haptic feedback when changing input
                                             setExpectedInternal(value);
                                         }
                                     }}
+                                    onFocus={() => lightHaptics()} // Add feedback on focus
                                 />
                             </div>
                         )}
@@ -250,7 +258,7 @@ const GradeCard = memo(function GradeCard({
                     <>
                         <Medal
                             edit={editMode}
-                            setEdit={setEditMode}
+                            setEdit={toggleEditMode}
                             grade={
                                 (Number(mark.overall.total) == 100
                                     ? getGrade(Number(mark.overall.scored))

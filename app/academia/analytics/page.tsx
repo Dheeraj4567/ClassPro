@@ -3,6 +3,7 @@ import { fetchUserData } from "@/hooks/fetchUserData";
 import { fetchCalendar } from "@/hooks/fetchCalendar";
 import AnalyticsClient from "./components/AnalyticsClient";
 import NavBarWrapper from "./components/NavBarWrapper";
+import { MobileProvider } from "./components/MobileContext";
 
 export default async function Analytics() {
   // Fetch data on the server
@@ -23,13 +24,15 @@ export default async function Analytics() {
           </p>
         </section>
 
-        {/* Pass data to client components */}
-        <AnalyticsClient 
-          marks={marks?.marks} 
-          courses={courses?.courses} 
-          attendance={attendance?.attendance} 
-          calendar={calendarData?.calendar} 
-        />
+        {/* Wrap client components with MobileProvider */}
+        <MobileProvider>
+          <AnalyticsClient 
+            marks={marks?.marks} 
+            courses={courses?.courses} 
+            attendance={attendance?.attendance} 
+            calendar={calendarData?.calendar} 
+          />
+        </MobileProvider>
       </div>
       <NavBarWrapper />
     </>

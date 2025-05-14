@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Mark } from "@/types/Marks";
 import { Course } from "@/types/Course";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
+import { useMobileView } from './MobileContext';
+import { lightHaptics, mediumHaptics } from '@/utils/haptics';
 
 interface MarksAnalyticsProps {
   marks?: Mark[];
@@ -27,6 +29,8 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourseData | null>(null);
   // State for chart display orientation on mobile
   const [mobileView, setMobileView] = useState<'vertical' | 'horizontal'>('horizontal');
+  // Get mobile view state from context
+  const { isMobileView } = useMobileView();
 
   // If no marks data available, show placeholder
   if (!marks?.length) {
@@ -59,11 +63,13 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
 
   // Handle click on a bar to show detailed information
   const handleBarClick = (data: any) => {
+    lightHaptics(); // Add haptic feedback when selecting a bar
     setSelectedCourse(data);
   };
 
   // Toggle mobile chart view between horizontal and vertical
   const toggleMobileView = () => {
+    lightHaptics(); // Add haptic feedback when toggling view
     setMobileView(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
@@ -106,6 +112,12 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
       );
     }
     return null;
+  };
+
+  // Close modal with haptic feedback
+  const handleCloseModal = () => {
+    mediumHaptics();
+    setSelectedCourse(null);
   };
 
   return (
@@ -151,20 +163,22 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
         </div>
         
         {/* Mobile view toggle control */}
-        <div className="block sm:hidden mb-4">
-          <button 
-            onClick={toggleMobileView}
-            className="w-full py-2 px-3 bg-light-background-light dark:bg-dark-background-light rounded-lg text-sm flex items-center justify-center gap-2"
-          >
-            <span>Switch to {mobileView === 'horizontal' ? 'Vertical' : 'Horizontal'} View</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
-              <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
-              <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
-              <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
-            </svg>
-          </button>
-        </div>
+        {isMobileView && (
+          <div className="mb-4">
+            <button 
+              onClick={toggleMobileView}
+              className="w-full py-2 px-3 bg-light-background-light dark:bg-dark-background-light rounded-lg text-sm flex items-center justify-center gap-2"
+            >
+              <span>Switch to {mobileView === 'horizontal' ? 'Vertical' : 'Horizontal'} View</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+                <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+                <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+              </svg>
+            </button>
+          </div>
+        )}
         
         {/* Course Marks Comparison - Using a responsive layout */}
         <div className="mb-6">
@@ -215,142 +229,101 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
           </div>
         </div>
         
-        {/* Total marks achieved vs. total marks graph */}
-        <div className="mt-8">
-          <h3 className="text-lg font-medium mb-4">Total Marks Achieved vs Total Marks</h3>
-          <div className={`h-80 w-full ${mobileView === 'vertical' ? 'min-h-[500px]' : ''}`}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout={mobileView === 'vertical' && window.innerWidth < 640 ? 'vertical' : 'horizontal'}
-                margin={{ 
-                  top: 10, 
-                  right: 20, 
-                  left: mobileView === 'vertical' && window.innerWidth < 640 ? 60 : 0, 
-                  bottom: mobileView === 'horizontal' || window.innerWidth >= 640 ? 60 : 10
-                }}
-                onClick={(data) => data?.activePayload && handleBarClick(data.activePayload[0].payload)}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                {mobileView === 'vertical' && window.innerWidth < 640 ? (
-                  <>
-                    <XAxis type="number" />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category"
-                      width={50}
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(value) => value.length > 10 ? `${value.substring(0, 10)}...` : value}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-45} 
-                      textAnchor="end"
-                      tick={{ fontSize: 10 }}
-                      height={80}
-                      tickFormatter={(value) => value.length > 12 ? `${value.substring(0, 12)}...` : value}
-                    />
-                    <YAxis />
-                  </>
-                )}
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" height={36} />
-                <Bar 
-                  name="Total Marks" 
-                  dataKey="total" 
-                  fill="var(--color-light-background-dark)"
-                  fillOpacity={0.7} 
-                  className="dark:fill-dark-background-dark cursor-pointer"
-                />
-                <Bar 
-                  name="Marks Achieved" 
-                  dataKey="scored" 
-                  fill="var(--color-light-accent)"
-                  className="dark:fill-dark-accent cursor-pointer" 
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Percentage graph */}
-        <div className="mt-12">
-          <h3 className="text-lg font-medium mb-4">Marks Percentage by Course</h3>
-          <div className={`h-80 w-full ${mobileView === 'vertical' ? 'min-h-[500px]' : ''}`}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout={mobileView === 'vertical' && window.innerWidth < 640 ? 'vertical' : 'horizontal'}
-                margin={{ 
-                  top: 10, 
-                  right: 20, 
-                  left: mobileView === 'vertical' && window.innerWidth < 640 ? 60 : 0, 
-                  bottom: mobileView === 'horizontal' || window.innerWidth >= 640 ? 60 : 10 
-                }}
-                onClick={(data) => data?.activePayload && handleBarClick(data.activePayload[0].payload)}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                {mobileView === 'vertical' && window.innerWidth < 640 ? (
-                  <>
-                    <XAxis type="number" domain={[0, 100]} />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category"
-                      width={50}
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(value) => value.length > 10 ? `${value.substring(0, 10)}...` : value}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-45} 
-                      textAnchor="end"
-                      tick={{ fontSize: 10 }}
-                      height={80}
-                      tickFormatter={(value) => value.length > 12 ? `${value.substring(0, 12)}...` : value}
-                    />
-                    <YAxis domain={[0, 100]} />
-                  </>
-                )}
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" height={36} />
-                <Bar 
-                  name="Percentage" 
-                  dataKey="percentage" 
-                  fill="var(--color-light-accent)" 
-                  className="dark:fill-dark-accent cursor-pointer"
-                  barSize={mobileView === 'vertical' ? 15 : 30}
+        {/* Chart container with proper mobile optimization */}
+        <div className={isMobileView ? "flex flex-col gap-4" : "grid grid-cols-2 gap-6"}>
+          {/* Theory courses chart */}
+          <div className="rounded-lg p-3 bg-light-background-normal dark:bg-dark-background-normal" 
+               style={{ height: isMobileView ? '250px' : '300px' }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-medium">Theory Courses</h3>
+              {isMobileView && (
+                <button 
+                  onClick={toggleMobileView}
+                  className="text-xs px-2 py-1 rounded bg-light-background-dark dark:bg-dark-background-dark text-light-accent dark:text-dark-accent"
                 >
-                  {chartData.map((entry, index) => (
-                    <rect
-                      key={`cell-${index}`}
-                      fill={
-                        entry.percentage >= 75
-                          ? "var(--color-light-success-color)"
-                          : entry.percentage >= 60
-                          ? "var(--color-light-warn-color)"
-                          : "var(--color-light-error-color)"
-                      }
-                      className={
-                        entry.percentage >= 75
-                          ? "dark:fill-dark-success-color cursor-pointer"
-                          : entry.percentage >= 60
-                          ? "dark:fill-dark-warn-color cursor-pointer"
-                          : "dark:fill-dark-error-color cursor-pointer"
-                      }
-                    />
-                  ))}
-                </Bar>
+                  {mobileView === 'horizontal' ? 'Vertical' : 'Horizontal'}
+                </button>
+              )}
+            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={theoryCourses} 
+                layout={isMobileView && mobileView === 'vertical' ? "vertical" : "horizontal"} 
+                margin={isMobileView ? { top: 5, right: 10, left: 10, bottom: 20 } : { top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                {isMobileView && mobileView === 'vertical' ? (
+                  <>
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <YAxis type="category" dataKey="courseCode" width={40} tick={{ fontSize: 10 }} />
+                  </>
+                ) : (
+                  <>
+                    <XAxis type="category" dataKey="courseCode" tick={{ fontSize: isMobileView ? 9 : 12 }} height={40} angle={isMobileView ? -45 : 0} textAnchor={isMobileView ? "end" : "middle"} />
+                    <YAxis type="number" domain={[0, 100]} tick={{ fontSize: isMobileView ? 10 : 12 }} />
+                  </>
+                )}
+                <Tooltip content={<CustomTooltip />} />
+                <Legend verticalAlign="top" height={36} />
+                <Bar 
+                  dataKey="percentage" 
+                  name="Percentage" 
+                  fill="var(--light-accent)" 
+                  radius={[0, 4, 4, 0]} 
+                  barSize={isMobileView ? 12 : 15}
+                  onClick={handleBarClick}
+                  cursor="pointer"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Practical courses chart */}
+          <div className="rounded-lg p-3 bg-light-background-normal dark:bg-dark-background-normal" 
+               style={{ height: isMobileView ? '250px' : '300px' }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-medium">Practical Courses</h3>
+              {isMobileView && (
+                <button 
+                  onClick={toggleMobileView}
+                  className="text-xs px-2 py-1 rounded bg-light-background-dark dark:bg-dark-background-dark text-light-accent dark:text-dark-accent"
+                >
+                  {mobileView === 'horizontal' ? 'Vertical' : 'Horizontal'}
+                </button>
+              )}
+            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={practicalCourses} 
+                layout={isMobileView && mobileView === 'vertical' ? "vertical" : "horizontal"}
+                margin={isMobileView ? { top: 5, right: 10, left: 10, bottom: 20 } : { top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                {isMobileView && mobileView === 'vertical' ? (
+                  <>
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <YAxis type="category" dataKey="courseCode" width={40} tick={{ fontSize: 10 }} />
+                  </>
+                ) : (
+                  <>
+                    <XAxis type="category" dataKey="courseCode" tick={{ fontSize: isMobileView ? 9 : 12 }} height={40} angle={isMobileView ? -45 : 0} textAnchor={isMobileView ? "end" : "middle"} />
+                    <YAxis type="number" domain={[0, 100]} tick={{ fontSize: isMobileView ? 10 : 12 }} />
+                  </>
+                )}
+                <Tooltip content={<CustomTooltip />} />
+                <Legend verticalAlign="top" height={36} />
+                <Bar 
+                  dataKey="percentage" 
+                  name="Percentage" 
+                  fill="var(--light-accent)" 
+                  radius={[0, 4, 4, 0]} 
+                  barSize={isMobileView ? 12 : 15}
+                  onClick={handleBarClick}
+                  cursor="pointer"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-        
+
         {/* Detailed Course Modal - Mobile optimized */}
         {selectedCourse && (
           <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-2">
@@ -364,7 +337,7 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
                     </p>
                   </div>
                   <button 
-                    onClick={() => setSelectedCourse(null)}
+                    onClick={handleCloseModal}
                     className="text-light-color/60 dark:text-dark-color/60 hover:text-light-accent hover:dark:text-dark-accent"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -461,7 +434,7 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
                 
                 <div className="mt-6 sm:mt-8 flex justify-end">
                   <button 
-                    onClick={() => setSelectedCourse(null)}
+                    onClick={handleCloseModal}
                     className="px-3 py-1.5 sm:px-4 sm:py-2 bg-light-button dark:bg-dark-button text-light-color dark:text-dark-color text-sm rounded-lg hover:bg-light-button/80 hover:dark:bg-dark-button/80 transition-colors"
                   >
                     Close
