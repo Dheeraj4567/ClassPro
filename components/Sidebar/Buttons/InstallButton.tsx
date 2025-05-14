@@ -1,7 +1,7 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useCallback } from "react";
 import { GrInstallOption } from "react-icons/gr";
 import { usePwa } from "@dotmind/react-use-pwa";
-import { useCallback } from "react";
+import { strongHaptics } from "@/utils/haptics";
 
 export default forwardRef<HTMLButtonElement, { anchor: boolean }>(
 	function InstallButton({ anchor }, ref) {
@@ -10,6 +10,8 @@ export default forwardRef<HTMLButtonElement, { anchor: boolean }>(
 
 		const handleInstallPrompt = useCallback(() => {
 			if (canInstall) {
+				// Provide strong haptic feedback for important action
+				strongHaptics();
 				installPrompt();
 			}
 		}, [canInstall, installPrompt]);

@@ -2,10 +2,25 @@
 
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-
 import { cn } from "@/lib/utils";
+import { lightHaptics } from "@/utils/haptics";
 
-const Popover = PopoverPrimitive.Root;
+// Create a wrapper for Popover with haptic feedback
+const Popover = ({ onOpenChange, ...props }: PopoverPrimitive.PopoverProps) => {
+	// Enhanced open change handler with haptic feedback
+	const handleOpenChange = React.useCallback(
+		(open: boolean) => {
+			// Provide light haptic feedback when popover opens/closes
+			lightHaptics();
+			
+			// Call the original onOpenChange handler if it exists
+			onOpenChange?.(open);
+		},
+		[onOpenChange]
+	);
+	
+	return <PopoverPrimitive.Root onOpenChange={handleOpenChange} {...props} />;
+};
 
 const PopoverTrigger = PopoverPrimitive.Trigger;
 

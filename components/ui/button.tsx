@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
+import { lightHaptics } from "@/utils/haptics";
 
 const buttonBaseClasses =
 	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 dark:focus-visible:ring-neutral-300";
@@ -39,11 +40,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 			variant = "default",
 			size = "default",
 			asChild = false,
+			onClick,
 			...props
 		},
 		ref,
 	) => {
 		const Comp = asChild ? Slot : "button";
+		
+		// Enhanced onClick handler with haptic feedback
+		const handleClick = React.useCallback(
+			(event: React.MouseEvent<HTMLButtonElement>) => {
+				// Provide haptic feedback on button press
+				lightHaptics();
+				
+				// Call the original onClick handler if it exists
+				onClick?.(event);
+			},
+			[onClick]
+		);
+		
 		return (
 			<Comp
 				className={cn(
@@ -52,6 +67,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 					buttonSizeClasses[size],
 					className,
 				)}
+				onClick={handleClick}
 				ref={ref}
 				{...props}
 			/>

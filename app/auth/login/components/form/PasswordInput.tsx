@@ -5,8 +5,10 @@ import React, {
 	type Dispatch,
 	type SetStateAction,
 	type KeyboardEvent,
+	useCallback
 } from "react";
 import { BsEyeSlashFill, BsEyeFill } from "react-icons/bs";
+import { lightHaptics } from "@/utils/haptics";
 
 export default function PasswordInput({
 	password,
@@ -24,6 +26,13 @@ export default function PasswordInput({
 		}
 	};
 
+	// Handle toggle visibility with haptic feedback
+	const handleToggleVisibility = useCallback(() => {
+		// Provide haptic feedback when toggling password visibility
+		lightHaptics();
+		setVisible((e) => !e);
+	}, []);
+
 	return (
 		<>
 			<input
@@ -40,7 +49,7 @@ export default function PasswordInput({
 					tabIndex={-1}
 					onKeyDown={handleKeyDown}
 					className="absolute bottom-[16px] right-0 pr-4 text-right text-light-accent dark:text-dark-accent"
-					onClick={() => setVisible((e) => !e)}
+					onClick={handleToggleVisibility}
 				>
 					{visible ? <BsEyeSlashFill /> : <BsEyeFill />}
 				</button>

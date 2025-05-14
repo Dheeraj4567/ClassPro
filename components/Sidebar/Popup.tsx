@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { FaBookOpen } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { strongHaptics } from "@/utils/haptics";
 
 export default function Popup() {
 	const [opened, setOpened] = useState(false);
@@ -13,15 +14,17 @@ export default function Popup() {
 		if (!isAcknowledged) setOpened(true);
 	}, []);
 
-	function clicked() {
+	// Handle popup acknowledgment with haptic feedback
+	const handleAcknowledge = useCallback(() => {
+		// Provide strong haptic feedback for important action
+		strongHaptics();
 		setOpened(false);
 		localStorage.setItem("popup", "true");
-	}
+	}, []);
 
 	return (
 		opened && (
 			<div
-
 				role="button"
 				tabIndex={0}
 				className="fixed inset-0 z-50 flex animate-fastfade items-center justify-center bg-black/30 backdrop-blur-xs transition duration-150"
@@ -43,15 +46,13 @@ export default function Popup() {
 						<h2 className="text-2xl -mb-3 font-semibold capitalize text-light-color dark:text-dark-color">
 							ClassPro
 						</h2>
-						{/* <p className="-mt-3 text-sm underline text-light-color dark:text-dark-color decoration-light-accent opacity-40 dark:decoration-dark-accent">
-            AcademiaPro is now ClassPro
-          </p> */}
 					</div>
 					<p className="mx-2 text-center opacity-50 text-light-color dark:text-dark-color">
 						This free,{" "}
 						<Link
-							href={"https://github.com/rahuletto/classpro"}
-							className="underline decoration-dashed"
+							className="text-light-accent dark:text-dark-accent underline underline-offset-2"
+							href="https://github.com/kawojue/srm-academics"
+							target="_blank"
 						>
 							open-source
 						</Link>{" "}
@@ -60,7 +61,7 @@ export default function Popup() {
 					</p>
 					<button
 						type="button"
-						onClick={clicked}
+						onClick={handleAcknowledge}
 						className="absolute bottom-0 left-0 flex h-12 w-full items-center justify-center rounded-b-[42px] bg-light-accent font-medium text-light-background-light dark:text-dark-background-darker"
 					>
 						Accept and Continue

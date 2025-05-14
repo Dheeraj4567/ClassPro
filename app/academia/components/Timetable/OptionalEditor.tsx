@@ -1,7 +1,8 @@
 import type { Schedule } from "@/types/Timetable";
 import type React from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { FaTrashAlt } from "react-icons/fa";
+import { mediumHaptics, strongHaptics, successHaptics, errorHaptics } from "@/utils/haptics";
 
 function OptionalHours({
 	optionals,
@@ -13,21 +14,48 @@ function OptionalHours({
 	timetable: Schedule[];
 }) {
 	const [button, setButton] = useState(false);
-	const handleDayChange = (index: number, day: string) => {
+
+	const handleDayChange = useCallback((index: number, day: string) => {
+		// Provide medium haptic feedback when changing days
+		mediumHaptics();
+
 		const [, hourSlot] = optionals[index].split("-");
 		const newOptionals = [...optionals];
 		newOptionals[index] = `${day}-${hourSlot}`;
 		setOptionals(newOptionals);
-	};
+	}, [optionals, setOptionals]);
 
-	const handleHourChange = (index: number, hour: string) => {
+	const handleHourChange = useCallback((index: number, hour: string) => {
+		// Provide medium haptic feedback when changing hours
+		mediumHaptics();
+
 		const [dayorder] = optionals[index].split("-");
 		const newOptionals = [...optionals];
 		newOptionals[index] = `${dayorder}-${hour}`;
 		setOptionals(newOptionals);
-	};
+	}, [optionals, setOptionals]);
+
+	const handleRemove = useCallback((index: number) => {
+		// Provide medium haptic feedback when removing items
+		mediumHaptics();
+
+		const newOptionals = [...optionals];
+		newOptionals.splice(index, 1);
+		setOptionals(newOptionals);
+	}, [optionals, setOptionals]);
+
+	const handleAdd = useCallback(() => {
+		// Provide medium haptic feedback when adding fields
+		mediumHaptics();
+
+		if (optionals[optionals.length - 1] !== "D0-H0") {
+			setOptionals([...optionals, "D0-H0"]);
+		}
+	}, [optionals, setOptionals]);
 
 	function handleSave() {
+		// Provide strong haptic feedback when saving
+		strongHaptics();
 		setButton(true);
 		fetch("/api/ophours", {
 			method: "POST",
@@ -40,9 +68,15 @@ function OptionalHours({
 			.then((b) => {
 				setButton(false);
 				if (b.success) {
+					// Provide success haptic feedback
+					successHaptics();
 					alert("Saved successfully");
 					window.location.reload();
-				} else alert("An error occured! x_x");
+				} else {
+					// Provide error haptic feedback
+					errorHaptics();
+					alert("An error occured! x_x");
+				}
 			});
 	}
 
@@ -60,12 +94,7 @@ function OptionalHours({
 							<button
 								type="button"
 								className="aspect-square bg-light-error-background dark:bg-dark-error-background text-light-error-color dark:text-dark-error-color rounded-lg p-2"
-								onClick={() => {
-									const newOptionals = optionals.filter(
-										(_, index) => index !== i,
-									);
-									setOptionals(newOptionals);
-								}}
+								onClick={() => handleRemove(i)}
 							>
 								<FaTrashAlt />
 							</button>
@@ -118,11 +147,7 @@ function OptionalHours({
 					type="button"
 					disabled={optionals[optionals.length - 1] === "D0-H0"}
 					className="bg-light-accent disabled:opacity-50 dark:bg-dark-accent text-light-background-light dark:text-dark-background-dark rounded-xl p-2 px-4 w-fit font-semibold"
-					onClick={() => {
-						if (optionals[optionals.length - 1] !== "D0-H0") {
-							setOptionals([...optionals, "D0-H0"]);
-						}
-					}}
+					onClick={handleAdd}
 				>
 					Add Field
 				</button>

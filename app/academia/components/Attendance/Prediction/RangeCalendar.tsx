@@ -11,6 +11,7 @@ import type { CategorizedDateRange } from "@/types/Attendance";
 import type { Calendar as CalendarType } from "@/types/Calendar";
 import { months } from "..";
 import { FaCrown } from "react-icons/fa6";
+import { lightHaptics, mediumHaptics } from "@/utils/haptics";
 
 type DateCategory = "Leave" | "OD";
 
@@ -34,13 +35,15 @@ export function LeaveODRangeCalendar({
 
 	const handleSelect = (value: any) => {
 		if (!value) return;
+		// Add haptic feedback when user selects a date range
+		lightHaptics();
 		setDateRange(value);
 	};
 
 	const handleCategoryAdd = (category: DateCategory) => {
-		if (window.navigator.vibrate) {
-			window.navigator.vibrate(30);
-		}
+		// Enhanced with stronger haptic feedback when adding a category
+		mediumHaptics();
+
 		if (!isSubscribed && categorizedRanges.length >= 1) {
             alert("Please subscribe to add more ranges");
             return;
@@ -79,9 +82,8 @@ export function LeaveODRangeCalendar({
 	};
 
 	const handleDelete = (rangeToDelete: CategorizedDateRange) => {
-		if (window.navigator.vibrate) {
-			window.navigator.vibrate(30);
-		}
+		// Use our haptics utility for consistent feedback
+		mediumHaptics();
 		setCategorizedRanges((prev) =>
 			prev.filter((range) => range !== rangeToDelete),
 		);

@@ -1,9 +1,33 @@
 import * as React from "react";
-
 import { cn } from "@/lib/utils";
+import { lightHaptics } from "@/utils/haptics";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-	({ className, type, ...props }, ref) => {
+	({ className, type, onFocus, onBlur, ...props }, ref) => {
+		// Enhanced focus handler with haptic feedback
+		const handleFocus = React.useCallback(
+			(event: React.FocusEvent<HTMLInputElement>) => {
+				// Provide light haptic feedback on input focus
+				lightHaptics();
+				
+				// Call the original onFocus handler if it exists
+				onFocus?.(event);
+			},
+			[onFocus]
+		);
+		
+		// Enhanced blur handler with haptic feedback
+		const handleBlur = React.useCallback(
+			(event: React.FocusEvent<HTMLInputElement>) => {
+				// Provide light haptic feedback on input blur
+				lightHaptics();
+				
+				// Call the original onBlur handler if it exists
+				onBlur?.(event);
+			},
+			[onBlur]
+		);
+		
 		return (
 			<input
 				type={type}
@@ -12,6 +36,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 					className,
 				)}
 				ref={ref}
+				onFocus={handleFocus}
+				onBlur={handleBlur}
 				{...props}
 			/>
 		);

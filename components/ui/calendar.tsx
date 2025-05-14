@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, DayClickEventHandler } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
+import { mediumHaptics } from "@/utils/haptics";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -12,12 +13,26 @@ function Calendar({
 	className,
 	classNames,
 	showOutsideDays = true,
+	onDayClick,
 	...props
 }: CalendarProps) {
+	// Enhanced day click handler with haptic feedback
+	const handleDayClick: DayClickEventHandler = React.useCallback(
+		(day, modifiers, e) => {
+			// Provide medium haptic feedback on day selection
+			mediumHaptics();
+			
+			// Call the original onDayClick handler if it exists
+			onDayClick?.(day, modifiers, e);
+		},
+		[onDayClick]
+	);
+	
 	return (
 		<DayPicker
 			showOutsideDays={showOutsideDays}
 			className={cn("p-3 mt-3", className)}
+			onDayClick={handleDayClick}
 			classNames={{
 				months:
 					"flex flex-col text-light-color dark:text-dark-color w-fit mx-auto space-y-4 sm:space-x-4 sm:space-y-0",
