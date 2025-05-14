@@ -49,6 +49,7 @@ const Slider = React.forwardRef<
 		<SliderPrimitive.Thumb className="z-20 block h-6 w-2 active:w-1 rounded-full bg-neutral-900 dark:bg-neutral-50 outline outline-4 outline-light-background-normal dark:outline-dark-background-normal focus-visible:ring-2 focus-visible:ring-light-background-normal dark:focus-visible:ring-dark-background-normal transition-all duration-150 disabled:pointer-events-none disabled:opacity-50" />
 	</SliderPrimitive.Root>
 ));
+
 Slider.displayName = SliderPrimitive.Root.displayName;
 
 export { Slider };
