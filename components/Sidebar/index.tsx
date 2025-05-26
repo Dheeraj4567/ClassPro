@@ -131,11 +131,11 @@ export function Sidebar({
               onClick={handleClick}
               href='/academia/gradex'
             >
-            <BsCalculatorFill className='text-xl' />
-              GradeX
+            <BsCalculatorFill className='text-xl text-light-color dark:text-dark-color' />
+              <span className="text-light-color dark:text-dark-color">GradeX</span>
             </Link>
           <Link title="Question papers" href="/academia/library">
-            <IoLibrarySharp className="text-xl" />
+            <IoLibrarySharp className="text-xl text-light-color dark:text-dark-color" />
             <span className="flex items-center justify-start gap-3 text-light-color dark:text-dark-color">
               Library{" "}
               <span className="text-xs px-1 rounded-md bg-light-accent dark:bg-dark-accent text-light-background-light dark:text-dark-background-dark py-0.5">
