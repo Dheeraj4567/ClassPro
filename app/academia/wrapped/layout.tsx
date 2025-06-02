@@ -49,9 +49,25 @@ export default function WrappedLayout({
       return;
     }
     
+    // Find the month string for the last working day
+    let monthString: string | undefined;
+    if (availability.lastWorkingDay && calendar.length > 0) {
+      // Find the month that contains the last working day
+      for (const monthData of calendar) {
+        const hasLastWorkingDay = monthData.days.some((day: any) => 
+          day.date === availability.lastWorkingDay!.date && 
+          day.event?.includes("Last Working Day")
+        );
+        if (hasLastWorkingDay) {
+          monthString = monthData.month;
+          break;
+        }
+      }
+    }
+    
     // If we have a last working day, check for cached data
     if (availability.lastWorkingDay) {
-      const cachedData = getCachedWrappedData(availability.lastWorkingDay);
+      const cachedData = getCachedWrappedData(availability.lastWorkingDay, monthString);
       
       if (cachedData) {
         // Use cached data if available
@@ -86,7 +102,8 @@ export default function WrappedLayout({
             wrappedData.marks, 
             wrappedData.courses, 
             wrappedData.attendance, 
-            availability.lastWorkingDay
+            availability.lastWorkingDay,
+            monthString
           );
         }
         

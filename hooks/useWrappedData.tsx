@@ -42,10 +42,26 @@ export const useWrappedData = ({ marks, courses, attendance, calendar }: UseWrap
       const availability = isClassProWrappedAvailable(calendar);
       setWrappedAvailability(availability);
       
+      // Find the month string for the last working day
+      let monthString: string | undefined;
+      if (availability.lastWorkingDay && calendar.length > 0) {
+        // Find the month that contains the last working day
+        for (const monthData of calendar) {
+          const hasLastWorkingDay = monthData.days.some((day: any) => 
+            day.date === availability.lastWorkingDay!.date && 
+            day.event?.includes("Last Working Day")
+          );
+          if (hasLastWorkingDay) {
+            monthString = monthData.month;
+            break;
+          }
+        }
+      }
+      
       // If we have a last working day, manage the wrapped data
       if (availability.lastWorkingDay) {
         // Check if we already have cached data
-        const cachedData = getCachedWrappedData(availability.lastWorkingDay);
+        const cachedData = getCachedWrappedData(availability.lastWorkingDay, monthString);
         
         if (cachedData) {
           // Use cached data if available (priority)
@@ -79,7 +95,7 @@ export const useWrappedData = ({ marks, courses, attendance, calendar }: UseWrap
             // Cache data if needed
             if (shouldCache) {
               console.log('Caching Wrapped data snapshot for this semester');
-              cacheWrappedData(marks, courses, attendance, availability.lastWorkingDay);
+              cacheWrappedData(marks, courses, attendance, availability.lastWorkingDay, monthString);
             }
           } else {
             // We're past the last working day and don't have cached data
