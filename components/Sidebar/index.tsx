@@ -209,6 +209,8 @@ export function Sidebar({
               </span>
             }
           />
+
+          <WrappedSidebarLink calendar={calendar} onClick={handleClick} />
         </div>
 
         <div className='flex flex-col-reverse gap-4'>
