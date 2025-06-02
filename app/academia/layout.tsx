@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/Sidebar";
 import DayOrder from "@/components/Sidebar/Badges/DayOrder";
 import ProfileBadge from "@/components/Sidebar/ProfileBadge";
 import { fetchUserData } from "@/hooks/fetchUserData";
+import { fetchCalendar } from "@/hooks/fetchCalendar";
 import type { UserInfo } from "@/types/User";
 import { Link } from "next-view-transitions";
 import type { ReactNode } from "react";
@@ -13,12 +14,14 @@ export default async function RootLayout({
 	children: ReactNode;
 }>) {
 	const json = await fetchUserData();
+	const calendarData = await fetchCalendar();
 
 	const subscribed = true;
 	return (
 		<div className="h-screen shrink-0 w-full flex flex-row bg-light-background-normal lg:p-2 transition-all duration-150 text-light-color dark:bg-dark-background-normal dark:text-dark-color">
 			<div id="attendance-predict" className="z-30" />
 			<Sidebar
+				calendar={calendarData?.calendar || []}
 				dayorder={<DayOrder />}
 				mini={
 					<DayOrder
