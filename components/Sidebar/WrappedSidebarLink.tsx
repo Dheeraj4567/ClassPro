@@ -36,11 +36,24 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
         // Make sure timestamp is within 24 hours (86400000 ms)
         const isFresh = Date.now() - cachedAvailability.timestamp < 86400000;
         
-        if (isFresh) {
+        // Check if the cached data is from before our date parsing fix
+        // If we have a last working day but isAvailable is false and daysRemaining/daysUntilLastWorkingDay are undefined,
+        // it's likely from the old buggy calculation
+        const isStaleCache = cachedAvailability.lastWorkingDay && 
+                           !cachedAvailability.isAvailable && 
+                           cachedAvailability.daysRemaining === undefined && 
+                           cachedAvailability.daysUntilLastWorkingDay === undefined;
+        
+        if (isFresh && !isStaleCache) {
           setAvailability(cachedAvailability);
           setIsVisible(true); // Always show the component
           console.log('[ClassPro Wrapped] Using cached availability:', cachedAvailability);
           return;
+        } else if (isStaleCache) {
+          console.log('[ClassPro Wrapped] Detected stale cache from old date parsing logic, recalculating...');
+          // Clear the stale cache
+          localStorage.removeItem('classProWrappedAvailability');
+          localStorage.removeItem('classProWrappedLastWorkingDay');
         }
       } catch (error) {
         console.error('[ClassPro Wrapped] Error parsing cached wrapped availability:', error);
