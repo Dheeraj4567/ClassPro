@@ -236,10 +236,9 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
     <section id="summary" className="w-full scroll-mt-20">
       <h2 className="text-2xl font-semibold pl-1">Performance Summary</h2>
       
-      {/* ClassProWrapped availability banner - only shown when available and not dismissed */}
-      {wrappedAvailability.isAvailable && (shouldPrompt || !hasViewed) && (
+      {/* ClassProWrapped availability banner - Temporarily Commented Out */}
+      {/* {wrappedAvailability.isAvailable && (shouldPrompt || !hasViewed) && (
         <div className="mb-4 p-4 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg overflow-hidden relative">
-          {/* Sparkle effects for a more festive look */}
           <div className="absolute top-0 right-0 w-20 h-20 opacity-30">
             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
               <circle cx="50" cy="50" r="3" fill="white" />
@@ -279,17 +278,17 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
             </div>
           </div>
         </div>
-      )}
+      )} */}
       
-      {/* ClassProWrapped component - hidden until triggered */}
-      {wrappedAvailability.isAvailable && (
+      {/* ClassProWrapped component - Temporarily Commented Out */}
+      {/* {wrappedAvailability.isAvailable && (
         <ClassProWrapped 
           ref={wrappedRef}
           marks={isDataLoaded ? wrappedData.marks : marks} 
           courses={isDataLoaded ? wrappedData.courses : courses} 
           attendance={isDataLoaded ? wrappedData.attendance : attendance} 
         />
-      )}
+      )} */}
       
       <div className="my-4 p-3 sm:p-5 bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-sm">
         {/* Performance Status */}
