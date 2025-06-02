@@ -120,10 +120,10 @@ export default function WrappedPage() {
   // If loading, show a loading animation
   if (isLoading) {
     return (
-      <div className="w-full h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex flex-col items-center justify-center p-6 text-white">
-        <div className="w-20 h-20 border-4 border-t-white border-white/30 rounded-full animate-spin mb-6"></div>
-        <h1 className="text-2xl font-bold mb-2">Loading ClassPro Wrapped</h1>
-        <p className="text-white/70">Your semester story is being crafted...</p>
+      <div className="w-full h-screen bg-light-background-normal dark:bg-dark-background-normal flex flex-col items-center justify-center p-6">
+        <div className="w-20 h-20 border-4 border-t-light-accent dark:border-t-dark-accent border-light-background-light dark:border-dark-background-light rounded-full animate-spin mb-6"></div>
+        <h1 className="text-2xl font-bold mb-2 text-light-color dark:text-dark-color">Loading ClassPro Wrapped</h1>
+        <p className="text-light-color/70 dark:text-dark-color/70">Your semester insights are loading...</p>
       </div>
     );
   }
@@ -131,51 +131,29 @@ export default function WrappedPage() {
   // If showing the start button
   if (showStartButton) {
     return (
-      <div className="relative w-full h-screen overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-500 z-0">
-          {/* Background music waves animation */}
-          <div className="absolute bottom-0 left-0 w-full h-40 flex justify-center items-end overflow-hidden">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="mx-1 w-2 bg-white/40 rounded-t-md"
-                initial={{ height: 10 }}
-                animate={{ 
-                  height: [
-                    10 + Math.random() * 30,
-                    40 + Math.random() * 60,
-                    10 + Math.random() * 30
-                  ] 
-                }}
-                transition={{
-                  duration: 1.2 + Math.random(),
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                  delay: i * 0.05
-                }}
-              />
-            ))}
-          </div>
-        </div>
-        
-        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-6 text-white">
+      <div className="relative w-full h-screen overflow-hidden bg-light-background-normal dark:bg-dark-background-normal">
+        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-6">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="flex flex-col items-center text-center"
           >
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4">ClassPro Wrapped</h1>
-            <p className="text-xl mb-8 max-w-lg">Your academic journey from this semester, beautifully visualized</p>
+            <div className="w-24 h-24 bg-light-accent dark:bg-dark-accent rounded-2xl flex items-center justify-center mb-6">
+              <span className="text-4xl">📊</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-light-color dark:text-dark-color">ClassPro Wrapped</h1>
+            <p className="text-xl mb-8 max-w-lg text-light-color/70 dark:text-dark-color/70">
+              Your semester insights and academic achievements, wrapped up beautifully
+            </p>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               onClick={startExperience}
-              className="px-8 py-4 bg-white text-purple-600 font-bold rounded-full shadow-lg hover:shadow-xl transition-all"
+              className="px-8 py-4 bg-light-accent dark:bg-dark-accent text-light-background-light dark:text-dark-background-dark font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
             >
-              Start Your Experience
+              View Your Wrapped
             </motion.button>
           </motion.div>
           
@@ -183,10 +161,10 @@ export default function WrappedPage() {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="absolute bottom-8 text-sm text-white/70 text-center"
+            className="absolute bottom-8 text-sm text-light-color/50 dark:text-dark-color/50 text-center"
           >
-            <p>Available for a limited time only</p>
-            <p className="mt-1">Swipe through to see your personalized insights</p>
+            <p>Available for the semester period</p>
+            <p className="mt-1">Tap through to see your academic insights</p>
           </motion.div>
         </div>
       </div>
@@ -228,49 +206,69 @@ export default function WrappedPage() {
               transition={{ duration: 0.3 }}
               className="p-6 max-w-4xl mx-auto"
             >
-              <h2 className="text-2xl font-bold mb-6 text-light-color dark:text-dark-color">Your Semester by the Numbers</h2>
+              <h2 className="text-2xl font-bold mb-6 text-light-color dark:text-dark-color">Your Semester Statistics</h2>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Attendance Card */}
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-xl shadow-lg text-white">
-                  <h3 className="text-xl font-semibold mb-2">Attendance</h3>
-                  <div className="text-4xl font-bold mb-3">
+                <div className="bg-light-background-light dark:bg-dark-background-light p-6 rounded-xl border border-light-side dark:border-dark-side">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-light-accent/10 dark:bg-dark-accent/20 rounded-lg flex items-center justify-center mr-3">
+                      <span className="text-2xl">📅</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-light-color dark:text-dark-color">Attendance</h3>
+                  </div>
+                  <div className="text-3xl font-bold mb-2 text-light-accent dark:text-dark-accent">
                     {attendance.length > 0 
                       ? `${(attendance.reduce((acc, course) => acc + parseFloat(course.attendancePercentage), 0) / attendance.length).toFixed(1)}%` 
                       : "N/A"}
                   </div>
-                  <p className="text-white/70 text-sm">Your average attendance this semester</p>
+                  <p className="text-light-color/70 dark:text-dark-color/70 text-sm">Average attendance across all courses</p>
                 </div>
 
                 {/* Performance Card */}
-                <div className="bg-gradient-to-br from-pink-500 to-rose-400 p-6 rounded-xl shadow-lg text-white">
-                  <h3 className="text-xl font-semibold mb-2">Average Score</h3>
-                  <div className="text-4xl font-bold mb-3">
+                <div className="bg-light-background-light dark:bg-dark-background-light p-6 rounded-xl border border-light-side dark:border-dark-side">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-light-success-color/10 dark:bg-dark-success-color/20 rounded-lg flex items-center justify-center mr-3">
+                      <span className="text-2xl">📊</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-light-color dark:text-dark-color">Average Score</h3>
+                  </div>
+                  <div className="text-3xl font-bold mb-2 text-light-success-color dark:text-dark-success-color">
                     {marks.length > 0 
                       ? `${(marks.reduce((acc, mark) => acc + (Number(mark.overall.scored) / Number(mark.overall.total) * 100), 0) / marks.length).toFixed(1)}%` 
                       : "N/A"}
                   </div>
-                  <p className="text-white/70 text-sm">Your average marks across all courses</p>
+                  <p className="text-light-color/70 dark:text-dark-color/70 text-sm">Your performance across all assessments</p>
                 </div>
 
                 {/* Courses Card */}
-                <div className="bg-gradient-to-br from-green-500 to-teal-400 p-6 rounded-xl shadow-lg text-white">
-                  <h3 className="text-xl font-semibold mb-2">Course Load</h3>
-                  <div className="text-4xl font-bold mb-3">
+                <div className="bg-light-background-light dark:bg-dark-background-light p-6 rounded-xl border border-light-side dark:border-dark-side">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-light-info-color/10 dark:bg-dark-info-color/20 rounded-lg flex items-center justify-center mr-3">
+                      <span className="text-2xl">📚</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-light-color dark:text-dark-color">Courses</h3>
+                  </div>
+                  <div className="text-3xl font-bold mb-2 text-light-info-color dark:text-dark-info-color">
                     {courses.length}
                   </div>
-                  <p className="text-white/70 text-sm">Number of courses this semester</p>
+                  <p className="text-light-color/70 dark:text-dark-color/70 text-sm">Total subjects this semester</p>
                 </div>
 
                 {/* Hours Card */}
-                <div className="bg-gradient-to-br from-yellow-500 to-amber-400 p-6 rounded-xl shadow-lg text-white">
-                  <h3 className="text-xl font-semibold mb-2">Hours Spent</h3>
-                  <div className="text-4xl font-bold mb-3">
+                <div className="bg-light-background-light dark:bg-dark-background-light p-6 rounded-xl border border-light-side dark:border-dark-side">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-light-warn-color/10 dark:bg-dark-warn-color/20 rounded-lg flex items-center justify-center mr-3">
+                      <span className="text-2xl">⏰</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-light-color dark:text-dark-color">Class Hours</h3>
+                  </div>
+                  <div className="text-3xl font-bold mb-2 text-light-warn-color dark:text-dark-warn-color">
                     {attendance.length > 0 
-                      ? `${attendance.reduce((acc, course) => acc + Number(course.hoursConducted), 0)} hrs` 
+                      ? `${attendance.reduce((acc, course) => acc + Number(course.hoursConducted), 0)}` 
                       : "N/A"}
                   </div>
-                  <p className="text-white/70 text-sm">Total class hours this semester</p>
+                  <p className="text-light-color/70 dark:text-dark-color/70 text-sm">Total hours in classroom</p>
                 </div>
               </div>
 
@@ -278,30 +276,35 @@ export default function WrappedPage() {
               <div className="mt-8">
                 <h3 className="text-xl font-bold mb-4 text-light-color dark:text-dark-color">Your Achievements</h3>
                 <div className="space-y-4">
-                  {/* Achievement items - these would typically be generated from actual data */}
-                  <div className="flex items-center p-4 bg-light-background-light dark:bg-dark-background-light rounded-lg">
-                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center text-2xl mr-4">
-                      🏆
+                  {/* Perfect Attendance Achievement */}
+                  {attendance.filter(c => parseFloat(c.attendancePercentage) >= 95).length > 0 && (
+                    <div className="flex items-center p-4 bg-light-background-light dark:bg-dark-background-light rounded-xl border border-light-side dark:border-dark-side">
+                      <div className="w-12 h-12 bg-light-success-color/10 dark:bg-dark-success-color/20 rounded-xl flex items-center justify-center text-2xl mr-4">
+                        🏆
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-light-color dark:text-dark-color">Excellent Attendance</h4>
+                        <p className="text-sm text-light-color/70 dark:text-dark-color/70">
+                          95%+ attendance in {attendance.filter(c => parseFloat(c.attendancePercentage) >= 95).length} course{attendance.filter(c => parseFloat(c.attendancePercentage) >= 95).length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-light-color dark:text-dark-color">Perfect Attendance</h4>
-                      <p className="text-sm text-light-color/70 dark:text-dark-color/70">
-                        You had 100% attendance in {attendance.filter(c => parseFloat(c.attendancePercentage) >= 95).length} courses
-                      </p>
-                    </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-center p-4 bg-light-background-light dark:bg-dark-background-light rounded-lg">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-2xl mr-4">
-                      🌟
+                  {/* Academic Excellence Achievement */}
+                  {marks.filter(m => (Number(m.overall.scored) / Number(m.overall.total)) * 100 >= 90).length > 0 && (
+                    <div className="flex items-center p-4 bg-light-background-light dark:bg-dark-background-light rounded-xl border border-light-side dark:border-dark-side">
+                      <div className="w-12 h-12 bg-light-accent/10 dark:bg-dark-accent/20 rounded-xl flex items-center justify-center text-2xl mr-4">
+                        🌟
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-light-color dark:text-dark-color">Academic Excellence</h4>
+                        <p className="text-sm text-light-color/70 dark:text-dark-color/70">
+                          90%+ scores in {marks.filter(m => (Number(m.overall.scored) / Number(m.overall.total)) * 100 >= 90).length} assessment{marks.filter(m => (Number(m.overall.scored) / Number(m.overall.total)) * 100 >= 90).length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-light-color dark:text-dark-color">Academic Excellence</h4>
-                      <p className="text-sm text-light-color/70 dark:text-dark-color/70">
-                        You scored above 90% in {marks.filter(m => (Number(m.overall.scored) / Number(m.overall.total)) * 100 >= 90).length} courses
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -445,15 +448,15 @@ export default function WrappedPage() {
               
               <h2 className="text-2xl font-bold mb-6 text-light-color dark:text-dark-color">Share Your Results</h2>
               
-              <div className="bg-light-background-light dark:bg-dark-background-light p-6 rounded-xl shadow-md mb-8">
+              <div className="bg-light-background-light dark:bg-dark-background-light p-6 rounded-xl border border-light-side dark:border-dark-side mb-8">
                 <h3 className="text-xl font-semibold mb-4 text-light-color dark:text-dark-color">Your ClassPro Wrapped Summary</h3>
                 
                 {/* Summary card that would be shared */}
-                <div className="bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg p-6 text-white">
+                <div className="bg-light-accent dark:bg-dark-accent rounded-xl p-6 text-light-background-light dark:text-dark-background-dark">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h4 className="text-2xl font-bold">My Academic Year</h4>
-                      <p className="text-white/70">ClassPro Wrapped 2025</p>
+                      <h4 className="text-2xl font-bold">My Academic Semester</h4>
+                      <p className="opacity-70">ClassPro Wrapped 2025</p>
                     </div>
                     <div className="text-right">
                       <div className="text-3xl font-bold">
@@ -461,38 +464,38 @@ export default function WrappedPage() {
                           ? `${(marks.reduce((acc, mark) => acc + (Number(mark.overall.scored) / Number(mark.overall.total) * 100), 0) / marks.length).toFixed(0)}%` 
                           : "N/A"}
                       </div>
-                      <p className="text-white/70 text-sm">Overall Score</p>
+                      <p className="opacity-70 text-sm">Average Score</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <div className="text-lg font-semibold">{courses.length} Courses</div>
-                      <div className="text-white/70 text-sm">Completed</div>
+                    <div className="bg-light-background-light/10 dark:bg-dark-background-light/20 rounded-lg p-3">
+                      <div className="text-lg font-semibold">{courses.length}</div>
+                      <div className="opacity-70 text-sm">Courses</div>
                     </div>
-                    <div>
+                    <div className="bg-light-background-light/10 dark:bg-dark-background-light/20 rounded-lg p-3">
                       <div className="text-lg font-semibold">
                         {attendance.length > 0 
                           ? `${(attendance.reduce((acc, course) => acc + parseFloat(course.attendancePercentage), 0) / attendance.length).toFixed(0)}%` 
                           : "N/A"}
                       </div>
-                      <div className="text-white/70 text-sm">Attendance</div>
+                      <div className="opacity-70 text-sm">Attendance</div>
                     </div>
                   </div>
                   
-                  <div className="border-t border-white/20 pt-4 mt-2">
-                    <p className="text-center font-medium">
-                      {marks.length > 0 && (
-                        <>Top Course: {
+                  {marks.length > 0 && (
+                    <div className="border-t border-light-background-light/20 dark:border-dark-background-light/30 pt-4 mt-2">
+                      <p className="text-center font-medium">
+                        🏆 Best Course: {
                           [...marks].sort((a, b) => {
-                            const aScore = Number(a.overall.scored);
-                            const bScore = Number(b.overall.scored);
+                            const aScore = (Number(a.overall.scored) / Number(a.overall.total)) * 100;
+                            const bScore = (Number(b.overall.scored) / Number(b.overall.total)) * 100;
                             return bScore - aScore;
                           })[0]?.courseName || 'N/A'
-                        }</>
-                      )}
-                    </p>
-                  </div>
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
                 
                 <div id="wrapped-share-card" className="relative">

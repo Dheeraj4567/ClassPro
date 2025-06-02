@@ -6,6 +6,7 @@ import { Calendar } from '@/types/Calendar';
 import { isClassProWrappedAvailable } from '@/utils/semesterTimings';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightHaptics } from '@/utils/haptics';
+import { IoStatsChart } from 'react-icons/io5';
 
 interface WrappedSidebarLinkProps {
   calendar: Calendar[];
@@ -100,11 +101,6 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
     router.push('/academia/wrapped');
   };
 
-  // Always render the component, but style it based on availability
-  // if (!isVisible) {
-  //   return null;
-  // }
-
   // Check if currently on the wrapped page
   const isActive = pathname === '/academia/wrapped';
   const isAvailable = availability.isAvailable;
@@ -120,59 +116,33 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
         <button
           onClick={handleClick}
           disabled={!isAvailable}
-          className={`w-full flex items-center gap-3 rounded-md py-2 px-3 transition-all ${
-            isActive
-              ? 'bg-light-accent/10 dark:bg-dark-accent/20 text-light-accent dark:text-dark-accent'
+          className={`font-semibold ${
+            isActive 
+              ? "bg-light-side text-light-accent dark:bg-dark-side dark:text-dark-accent" 
               : isAvailable
-                ? 'text-light-color dark:text-dark-color hover:bg-light-background-light dark:hover:bg-dark-background-light'
-                : 'text-light-color/40 dark:text-dark-color/40 cursor-not-allowed'
-          }`}
+                ? "hover:bg-light-side hover:text-light-accent hover:opacity-70 dark:hover:bg-dark-side dark:hover:text-dark-accent"
+                : "opacity-40 cursor-not-allowed"
+          } text-color text-light-color dark:text-dark-color flex flex-row-reverse items-center justify-between rounded-xl px-4 py-2 text-lg transition duration-150 hover:scale-[0.98] w-full`}
         >
-          {/* Animated icon - similar to the music wave animation */}
-          <div className="relative w-6 h-6 flex items-end justify-center">
-            {[1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                className={`mx-[1px] w-[3px] rounded-t-sm ${
-                  isAvailable 
-                    ? 'bg-gradient-to-t from-light-accent to-purple-500 dark:from-dark-accent dark:to-blue-400'
-                    : 'bg-light-color/20 dark:bg-dark-color/20'
-                }`}
-                animate={isAvailable ? {
-                  height: [`${10 + i * 5}px`, `${20 + i * 8}px`, `${10 + i * 5}px`],
-                } : {
-                  height: `${10 + i * 5}px`
-                }}
-                transition={isAvailable ? {
-                  duration: 0.8 + i * 0.2,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  ease: 'easeInOut',
-                } : {}}
-              />
-            ))}
+          <div className="flex items-center gap-3">
+            <IoStatsChart className="text-xl" />
+            <div className="flex flex-col text-left">
+              <span className="text-base">ClassPro Wrapped</span>
+              <span className="text-xs opacity-70 font-normal">
+                {!isAvailable
+                  ? 'Coming soon...'
+                  : availability.daysRemaining === 1
+                  ? 'Last day!'
+                  : `${availability.daysRemaining} days left`}
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-col text-left">
-            <span className={`font-semibold ${
-              isActive 
-                ? 'bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-indigo-500 dark:from-purple-400 dark:to-blue-400' 
-                : ''
-            }`}>ClassPro Wrapped</span>
-            <span className="text-xs opacity-70">
-              {!isAvailable
-                ? 'Coming soon...'
-                : availability.daysRemaining === 1
-                ? 'Last day!'
-                : `${availability.daysRemaining} days left`}
-            </span>
-          </div>
-
-          {/* "NEW" badge */}
-          <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-md text-white ${
+          {/* Status badge - matches the NEW badge pattern used elsewhere */}
+          <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${
             isAvailable 
-              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-400 dark:to-blue-500'
-              : 'bg-gray-400 dark:bg-gray-600'
+              ? 'bg-light-accent dark:bg-dark-accent text-light-background-light dark:text-dark-background-dark'
+              : 'bg-light-color/20 dark:bg-dark-color/20 text-light-color/60 dark:text-dark-color/60'
           }`}>
             {isAvailable ? 'NEW' : 'SOON'}
           </span>

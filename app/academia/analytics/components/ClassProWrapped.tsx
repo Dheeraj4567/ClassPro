@@ -54,102 +54,160 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
   }, [marks, courses, attendance]);
 
   const generateInsights = () => {
-    // Calculate top performing course
-    const topCourse = [...marks].sort((a, b) => {
-      const aScore = parseFloat(a.overall.scored || '0');
-      const bScore = parseFloat(b.overall.scored || '0');
-      return bScore - aScore;
-    })[0];
+    // Calculate top performing course with detailed analysis
+    const coursesWithScores = marks.map(mark => ({
+      ...mark,
+      scorePercentage: (parseFloat(mark.overall.scored || '0') / parseFloat(mark.overall.total || '100')) * 100
+    })).sort((a, b) => b.scorePercentage - a.scorePercentage);
+    
+    const topCourse = coursesWithScores[0];
+    const weakestCourse = coursesWithScores[coursesWithScores.length - 1];
 
-    // Find lowest attendance course
-    const lowestAttendance = [...attendance].sort((a, b) => {
-      return parseFloat(a.attendancePercentage) - parseFloat(b.attendancePercentage);
-    })[0];
+    // Find attendance insights
+    const attendanceWithDetails = attendance.map(course => ({
+      ...course,
+      percentage: parseFloat(course.attendancePercentage)
+    })).sort((a, b) => b.percentage - a.percentage);
+    
+    const bestAttendanceCourse = attendanceWithDetails[0];
+    const worstAttendanceCourse = attendanceWithDetails[attendanceWithDetails.length - 1];
 
-    // Calculate average scores
-    const avgScore = marks.reduce((acc, mark) => {
-      return acc + parseFloat(mark.overall.scored || '0');
-    }, 0) / marks.length;
+    // Calculate comprehensive averages
+    const avgScore = coursesWithScores.reduce((acc, course) => acc + course.scorePercentage, 0) / coursesWithScores.length;
+    const avgAttendance = attendanceWithDetails.reduce((acc, course) => acc + course.percentage, 0) / attendanceWithDetails.length;
 
-    // Calculate total attendance percentage
-    const avgAttendance = attendance.reduce((acc, course) => {
-      return acc + parseFloat(course.attendancePercentage);
-    }, 0) / attendance.length;
+    // Generate more realistic study streak based on attendance patterns
+    const attendanceConsistency = attendanceWithDetails.filter(course => course.percentage >= 75).length;
+    const studyStreak = Math.min(Math.max(attendanceConsistency * 3 + Math.floor(avgScore / 10), 5), 30);
 
-    // Calculate study streak (this would normally come from actual usage data)
-    // For demo purposes, we'll generate a random number between 5-20
-    const studyStreak = Math.floor(Math.random() * 16) + 5;
+    // Determine study patterns based on actual data
+    const strongSubjects = coursesWithScores.filter(course => course.scorePercentage >= 80).length;
+    const improvementNeeded = coursesWithScores.filter(course => course.scorePercentage < 60).length;
 
-    // Determine most active study day/time based on attendance
-    // This is simulated data - in a real app, this would use actual app usage patterns
-    const daysOfWeek = ['Monday', 'Wednesday', 'Friday'];
-    const mostActiveDay = daysOfWeek[Math.floor(Math.random() * daysOfWeek.length)];
+    // Calculate grade distribution
+    const gradeDistribution = {
+      excellent: coursesWithScores.filter(course => course.scorePercentage >= 90).length,
+      good: coursesWithScores.filter(course => course.scorePercentage >= 75 && course.scorePercentage < 90).length,
+      average: coursesWithScores.filter(course => course.scorePercentage >= 60 && course.scorePercentage < 75).length,
+      needsWork: coursesWithScores.filter(course => course.scorePercentage < 60).length
+    };
 
-    // Create slides array with insights
+    // Generate semester insights
+    const semesterGrade = avgScore >= 90 ? 'Outstanding' : 
+                         avgScore >= 80 ? 'Excellent' : 
+                         avgScore >= 70 ? 'Good' : 
+                         avgScore >= 60 ? 'Satisfactory' : 'Needs Improvement';
+
+    const attendanceGrade = avgAttendance >= 90 ? 'Excellent' : 
+                           avgAttendance >= 80 ? 'Good' : 
+                           avgAttendance >= 75 ? 'Satisfactory' : 'Poor';
+
+    // Create slides array with enhanced insights
     const newSlides: WrappedSlide[] = [
       {
         id: 'intro',
         title: 'Your Academic Year in Review',
-        subtitle: 'Swipe to see your personalized insights',
+        subtitle: 'Discover your learning journey and achievements',
         type: 'intro',
-        color: 'bg-gradient-to-br from-purple-600 to-blue-500'
+        color: 'bg-light-accent dark:bg-dark-accent'
+      },
+      {
+        id: 'semester-overview',
+        title: 'Semester Performance',
+        subtitle: `${semesterGrade} • ${avgScore.toFixed(1)}% Average`,
+        type: 'stat',
+        data: { 
+          avgScore, 
+          semesterGrade,
+          totalCourses: courses.length,
+          gradeDistribution 
+        },
+        color: avgScore >= 80 ? 'bg-green-600 dark:bg-green-700' : 
+               avgScore >= 70 ? 'bg-blue-600 dark:bg-blue-700' : 'bg-orange-600 dark:bg-orange-700'
       },
       {
         id: 'top-course',
-        title: 'Your Top Course',
-        subtitle: topCourse ? `${topCourse.courseName} - ${topCourse.overall.scored || 0}/${topCourse.overall.total}` : 'No data available',
+        title: 'Academic Excellence',
+        subtitle: topCourse ? 
+          `${topCourse.courseName} • ${topCourse.scorePercentage.toFixed(1)}%` : 
+          'No top course data available',
         type: 'highlight',
-        data: topCourse,
-        color: 'bg-gradient-to-br from-green-500 to-teal-400'
+        data: { 
+          ...topCourse, 
+          improvement: strongSubjects,
+          totalCourses: courses.length 
+        },
+        color: 'bg-emerald-600 dark:bg-emerald-700'
       },
       {
-        id: 'study-streak',
-        title: 'Your Study Streak',
-        subtitle: `${studyStreak} Days`,
+        id: 'attendance-champion',
+        title: 'Attendance Excellence',
+        subtitle: `${attendanceGrade} • ${avgAttendance.toFixed(1)}% Average`,
         type: 'stat',
-        data: { studyStreak },
-        color: 'bg-gradient-to-br from-orange-500 to-yellow-400'
+        data: { 
+          avgAttendance, 
+          attendanceGrade,
+          bestCourse: bestAttendanceCourse,
+          consistency: attendanceConsistency
+        },
+        color: avgAttendance >= 85 ? 'bg-blue-600 dark:bg-blue-700' : 
+               avgAttendance >= 75 ? 'bg-cyan-600 dark:bg-cyan-700' : 'bg-yellow-600 dark:bg-yellow-700'
       },
       {
-        id: 'attendance-insight',
-        title: 'Attendance Champion',
-        subtitle: `${avgAttendance.toFixed(1)}% Average Attendance`,
+        id: 'study-consistency',
+        title: 'Study Consistency',
+        subtitle: `${studyStreak} Day Learning Streak`,
         type: 'stat',
-        data: { avgAttendance },
-        color: 'bg-gradient-to-br from-blue-500 to-indigo-600'
+        data: { 
+          studyStreak, 
+          consistentCourses: attendanceConsistency,
+          totalCourses: courses.length 
+        },
+        color: 'bg-purple-600 dark:bg-purple-700'
       },
       {
-        id: 'avg-performance',
-        title: 'Overall Performance',
-        subtitle: `${avgScore.toFixed(2)} Points Average`,
+        id: 'performance-chart',
+        title: 'Course Performance Overview',
+        subtitle: `${strongSubjects} strong subjects out of ${courses.length}`,
         type: 'chart',
-        data: { avgScore, marks },
-        color: 'bg-gradient-to-br from-pink-500 to-rose-400'
+        data: { 
+          avgScore, 
+          marks: coursesWithScores,
+          gradeDistribution,
+          strongSubjects
+        },
+        color: 'bg-indigo-600 dark:bg-indigo-700'
       },
       {
-        id: 'active-time',
-        title: 'Your Study Pattern',
-        subtitle: `Most active on ${mostActiveDay}s`,
-        type: 'stat',
-        data: { mostActiveDay },
-        color: 'bg-gradient-to-br from-violet-500 to-purple-400'
-      },
-      {
-        id: 'attendance-challenge',
-        title: 'Room for Improvement',
-        subtitle: lowestAttendance ? 
-          `${lowestAttendance.courseTitle} - ${lowestAttendance.attendancePercentage}% attendance` :
-          'Great attendance across all courses!',
+        id: 'growth-opportunity',
+        title: improvementNeeded > 0 ? 'Growth Opportunities' : 'Consistent Excellence',
+        subtitle: improvementNeeded > 0 ? 
+          `${improvementNeeded} subject${improvementNeeded > 1 ? 's' : ''} to focus on` :
+          'Outstanding performance across all subjects!',
         type: 'highlight',
-        data: lowestAttendance,
-        color: 'bg-gradient-to-br from-red-500 to-orange-400'
+        data: { 
+          weakestCourse, 
+          improvementNeeded,
+          worstAttendanceCourse: worstAttendanceCourse?.percentage < 75 ? worstAttendanceCourse : null
+        },
+        color: improvementNeeded > 0 ? 'bg-red-600 dark:bg-red-700' : 'bg-green-600 dark:bg-green-700'
       },
       {
-        id: 'final',
-        title: 'You\'ve Had a Great Semester!',
-        subtitle: 'Keep up the good work',
+        id: 'final-celebration',
+        title: 'Semester Complete!',
+        subtitle: `You've shown ${semesterGrade.toLowerCase()} academic performance`,
         type: 'final',
-        color: 'bg-gradient-to-br from-indigo-600 to-violet-500'
+        data: {
+          semesterGrade,
+          avgScore,
+          avgAttendance,
+          achievements: {
+            topScore: topCourse?.scorePercentage.toFixed(1),
+            bestAttendance: bestAttendanceCourse?.percentage.toFixed(1),
+            consistency: studyStreak
+          }
+        },
+        color: 'bg-gradient-to-br from-light-accent to-blue-600 dark:from-dark-accent dark:to-blue-700'
       },
     ];
 
@@ -212,114 +270,232 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
     }
   };
 
-  // Render chart based on marks data
+  // Render enhanced chart based on marks data
   const renderChart = (data: any) => {
-    const { marks } = data;
+    const { marks, gradeDistribution, strongSubjects } = data;
     if (!marks || !marks.length) return null;
 
     return (
-      <div className="w-full h-48 relative flex items-end justify-between mt-4 mb-6 px-4">
-        {marks.map((mark: Mark, index: number) => {
-          const score = parseFloat(mark.overall.scored || '0');
-          const total = parseFloat(mark.overall.total || '100');
-          const percentage = (score / total) * 100;
-          const height = `${percentage}%`;
-          
-          return (
-            <div key={mark.courseCode} className="flex flex-col items-center">
-              <div 
-                className="w-4 md:w-6 rounded-t-md bg-white bg-opacity-80" 
-                style={{ height, minHeight: '10px' }}
-              ></div>
-              <span className="text-xs mt-2 text-white rotate-90 md:rotate-0">
-                {mark.courseCode.split(' ')[0]}
-              </span>
+      <div className="w-full mt-6 mb-6">
+        {/* Performance bars */}
+        <div className="w-full h-48 relative flex items-end justify-between px-4 mb-6">
+          {marks.slice(0, 6).map((mark: any, index: number) => {
+            const percentage = mark.scorePercentage;
+            const height = `${Math.max(percentage, 5)}%`;
+            const barColor = percentage >= 90 ? 'bg-green-400' : 
+                            percentage >= 75 ? 'bg-blue-400' : 
+                            percentage >= 60 ? 'bg-yellow-400' : 'bg-red-400';
+            
+            return (
+              <div key={mark.courseCode} className="flex flex-col items-center flex-1 max-w-[60px]">
+                <div 
+                  className={`w-full rounded-t-md ${barColor} bg-opacity-90 transition-all duration-500`}
+                  style={{ height, minHeight: '10px' }}
+                ></div>
+                <div className="text-white text-xs mt-2 text-center">
+                  <div className="font-semibold">{percentage.toFixed(0)}%</div>
+                  <div className="opacity-75 truncate w-full">
+                    {mark.courseCode.split(' ')[0]}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Performance summary */}
+        <div className="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
+          <div className="grid grid-cols-2 gap-4 text-center text-white">
+            <div>
+              <div className="text-2xl font-bold text-green-300">{strongSubjects}</div>
+              <div className="text-sm opacity-75">Strong Subjects</div>
             </div>
-          );
-        })}
+            <div>
+              <div className="text-2xl font-bold text-blue-300">{marks.length}</div>
+              <div className="text-sm opacity-75">Total Courses</div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
 
-  // Render stat visualization
-  const renderStat = (data: any, type: string) => {
-    switch (type) {
-      case 'attendance-insight':
+  // Render stat visualization with enhanced data
+  const renderStat = (data: any, slideId: string) => {
+    switch (slideId) {
+      case 'semester-overview':
         return (
           <div className="flex flex-col items-center justify-center mt-8">
-            <div className="relative w-40 h-40 rounded-full border-8 border-white border-opacity-30 flex items-center justify-center">
-              <div className="text-white text-5xl font-bold">{data.avgAttendance.toFixed(1)}%</div>
+            <div className="relative w-48 h-48 rounded-full border-8 border-white border-opacity-30 flex items-center justify-center mb-6">
+              <div className="text-center">
+                <div className="text-white text-4xl font-bold">{data.avgScore.toFixed(1)}%</div>
+                <div className="text-white text-sm opacity-75">{data.semesterGrade}</div>
+              </div>
               <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100">
                 <circle 
                   cx="50" cy="50" r="45" 
                   fill="none" 
                   stroke="white" 
-                  strokeWidth="8" 
+                  strokeWidth="6" 
                   strokeOpacity="0.2"
                 />
                 <circle 
                   cx="50" cy="50" r="45" 
                   fill="none" 
                   stroke="white" 
-                  strokeWidth="8" 
-                  strokeDasharray={`${data.avgAttendance * 2.83} 283`} 
+                  strokeWidth="6" 
+                  strokeDasharray={`${data.avgScore * 2.83} 283`} 
                   transform="rotate(-90 50 50)"
                 />
               </svg>
             </div>
-            <div className="text-white mt-4 opacity-75">Your average attendance</div>
-          </div>
-        );
-      case 'study-streak':
-        return (
-          <div className="flex flex-col items-center justify-center mt-8">
-            <div className="relative flex items-center">
-              <span className="text-white text-7xl font-bold">{data.studyStreak}</span>
-              <div className="ml-2 flex flex-col">
-                <span className="text-white text-xl">days</span>
-                <span className="text-white text-xl">streak</span>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="text-white">
+                <div className="text-2xl font-bold">{data.gradeDistribution.excellent}</div>
+                <div className="text-sm opacity-75">Excellent (90%+)</div>
+              </div>
+              <div className="text-white">
+                <div className="text-2xl font-bold">{data.gradeDistribution.good}</div>
+                <div className="text-sm opacity-75">Good (75-89%)</div>
               </div>
             </div>
-            <div className="flex mt-6">
-              {Array(7).fill(0).map((_, i) => (
+          </div>
+        );
+      case 'attendance-champion':
+        return (
+          <div className="flex flex-col items-center justify-center mt-8">
+            <div className="relative w-44 h-44 rounded-full border-8 border-white border-opacity-30 flex items-center justify-center mb-6">
+              <div className="text-center">
+                <div className="text-white text-5xl font-bold">{data.avgAttendance.toFixed(0)}%</div>
+                <div className="text-white text-sm opacity-75">{data.attendanceGrade}</div>
+              </div>
+              <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100">
+                <circle 
+                  cx="50" cy="50" r="42" 
+                  fill="none" 
+                  stroke="white" 
+                  strokeWidth="8" 
+                  strokeOpacity="0.2"
+                />
+                <circle 
+                  cx="50" cy="50" r="42" 
+                  fill="none" 
+                  stroke="white" 
+                  strokeWidth="8" 
+                  strokeDasharray={`${data.avgAttendance * 2.64} 264`} 
+                  transform="rotate(-90 50 50)"
+                />
+              </svg>
+            </div>
+            {data.bestCourse && (
+              <div className="text-white text-center mt-4">
+                <div className="text-lg font-semibold">{data.bestCourse.courseTitle}</div>
+                <div className="text-sm opacity-75">Best attendance: {data.bestCourse.percentage.toFixed(1)}%</div>
+              </div>
+            )}
+          </div>
+        );
+      case 'study-consistency':
+        return (
+          <div className="flex flex-col items-center justify-center mt-8">
+            <div className="relative flex items-center mb-6">
+              <span className="text-white text-8xl font-bold">{data.studyStreak}</span>
+              <div className="ml-3 flex flex-col">
+                <span className="text-white text-2xl font-semibold">days</span>
+                <span className="text-white text-lg opacity-75">streak</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center max-w-xs">
+              {Array(Math.min(data.studyStreak, 14)).fill(0).map((_, i) => (
                 <div 
                   key={i} 
-                  className={`w-8 h-8 mx-1 rounded-md ${i < 5 ? 'bg-white bg-opacity-80' : 'bg-white bg-opacity-30'}`}
+                  className="w-6 h-6 m-1 rounded-md bg-white bg-opacity-80"
                 ></div>
               ))}
+              {data.studyStreak > 14 && (
+                <div className="text-white text-sm opacity-75 mt-2">
+                  +{data.studyStreak - 14} more days
+                </div>
+              )}
+            </div>
+            <div className="text-white text-center mt-4">
+              <div className="text-sm opacity-75">
+                {data.consistentCourses}/{data.totalCourses} courses with 75%+ attendance
+              </div>
             </div>
           </div>
         );
       default:
-        return (
-          <div className="flex flex-col items-center justify-center mt-8">
-            <div className="text-white text-6xl font-bold">{data.mostActiveDay}</div>
-            <div className="text-white mt-4 opacity-75">is your most productive day</div>
-          </div>
-        );
+        return null;
     }
   };
 
-  // Render specific highlight visualization
+  // Render enhanced highlight visualization
   const renderHighlight = (data: any, slideId: string) => {
     if (slideId === 'top-course' && data) {
       return (
         <div className="flex flex-col items-center justify-center mt-6">
-          <div className="w-32 h-32 rounded-full bg-white bg-opacity-20 flex items-center justify-center mb-4">
-            <span className="text-white text-5xl font-bold">{data.overall?.scored || '?'}</span>
+          <div className="w-36 h-36 rounded-full bg-white bg-opacity-20 flex items-center justify-center mb-6 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="text-white text-4xl font-bold">{data.scorePercentage?.toFixed(1) || '?'}%</div>
+              <div className="text-white text-xs opacity-75">Top Score</div>
+            </div>
           </div>
-          <div className="text-white text-xl text-center max-w-[80%]">{data.courseName}</div>
+          <div className="text-white text-center max-w-[85%]">
+            <div className="text-xl font-semibold mb-2">{data.courseName || 'Course Name'}</div>
+            {data.improvement > 0 && (
+              <div className="text-sm opacity-75">
+                {data.improvement} out of {data.totalCourses} subjects performing well
+              </div>
+            )}
+          </div>
         </div>
       );
-    } else if (slideId === 'attendance-challenge' && data) {
-      return (
-        <div className="flex flex-col items-center justify-center mt-6">
-          <div className="w-32 h-32 rounded-full bg-white bg-opacity-20 flex items-center justify-center mb-4">
-            <span className="text-white text-5xl font-bold">{data.attendancePercentage}%</span>
+    } else if (slideId === 'growth-opportunity' && data) {
+      if (data.improvementNeeded === 0) {
+        // Excellent performance across all subjects
+        return (
+          <div className="flex flex-col items-center justify-center mt-6">
+            <div className="w-36 h-36 rounded-full bg-white bg-opacity-20 flex items-center justify-center mb-6 backdrop-blur-sm">
+              <div className="text-center">
+                <div className="text-white text-6xl">🏆</div>
+              </div>
+            </div>
+            <div className="text-white text-center max-w-[85%]">
+              <div className="text-lg font-semibold mb-2">Outstanding Achievement!</div>
+              <div className="text-sm opacity-75">
+                Consistent excellence across all subjects
+              </div>
+            </div>
           </div>
-          <div className="text-white text-xl text-center max-w-[80%]">{data.courseTitle}</div>
-        </div>
-      );
+        );
+      } else {
+        // Show improvement opportunity
+        return (
+          <div className="flex flex-col items-center justify-center mt-6">
+            <div className="w-36 h-36 rounded-full bg-white bg-opacity-20 flex items-center justify-center mb-6 backdrop-blur-sm">
+              <div className="text-center">
+                <div className="text-white text-4xl font-bold">{data.weakestCourse?.scorePercentage?.toFixed(1) || '?'}%</div>
+                <div className="text-white text-xs opacity-75">Focus Area</div>
+              </div>
+            </div>
+            <div className="text-white text-center max-w-[85%]">
+              <div className="text-lg font-semibold mb-2">{data.weakestCourse?.courseName || 'Subject'}</div>
+              <div className="text-sm opacity-75 mb-4">
+                Room for improvement in this subject
+              </div>
+              {data.worstAttendanceCourse && (
+                <div className="bg-white bg-opacity-10 rounded-lg p-3 backdrop-blur-sm">
+                  <div className="text-sm">
+                    <div className="font-medium">{data.worstAttendanceCourse.courseTitle}</div>
+                    <div className="opacity-75">{data.worstAttendanceCourse.percentage.toFixed(1)}% attendance</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
     }
     return null;
   };
@@ -361,7 +537,7 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
           <div className="flex flex-col items-center justify-between h-full py-10 px-6">
             <div className="text-white text-3xl md:text-4xl font-bold text-center">{slide.title}</div>
             {renderStat(slide.data, slide.id)}
-            <div className="text-white opacity-70 mt-auto">{slide.subtitle}</div>
+            <div className="text-white opacity-70 mt-auto text-center">{slide.subtitle}</div>
           </div>
         );
       case 'chart':
@@ -369,7 +545,7 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
           <div className="flex flex-col items-center justify-between h-full py-10 px-6">
             <div className="text-white text-3xl md:text-4xl font-bold text-center">{slide.title}</div>
             {renderChart(slide.data)}
-            <div className="text-white opacity-70 mt-4">{slide.subtitle}</div>
+            <div className="text-white opacity-70 mt-4 text-center">{slide.subtitle}</div>
           </div>
         );
       case 'highlight':
@@ -383,12 +559,32 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
       case 'final':
         return (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="text-white text-4xl md:text-5xl font-bold mb-4">Well Done!</div>
+            <div className="text-white text-4xl md:text-5xl font-bold mb-4">Semester Complete!</div>
             <div className="text-white text-xl md:text-2xl mb-8">{slide.title}</div>
-            <div className="text-white opacity-70 mb-12">{slide.subtitle}</div>
+            
+            {slide.data?.achievements && (
+              <div className="bg-white bg-opacity-10 rounded-xl p-6 mb-8 backdrop-blur-sm max-w-md">
+                <div className="grid grid-cols-3 gap-4 text-white">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-300">{slide.data.achievements.topScore}%</div>
+                    <div className="text-xs opacity-75">Top Score</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-300">{slide.data.achievements.bestAttendance}%</div>
+                    <div className="text-xs opacity-75">Best Attendance</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-300">{slide.data.achievements.consistency}</div>
+                    <div className="text-xs opacity-75">Day Streak</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-white opacity-70 mb-8">{slide.subtitle}</div>
             <button
               onClick={handleCloseWrapped}
-              className="px-8 py-3 bg-white text-purple-700 rounded-full font-bold"
+              className="px-8 py-3 bg-white dark:bg-light-color text-light-accent dark:text-dark-accent rounded-full font-bold hover:bg-opacity-90 transition-all duration-200 shadow-lg"
             >
               Close Wrapped
             </button>
@@ -406,21 +602,21 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
   return (
     <>
       <div 
-        className={`group cursor-pointer relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.02] ${hasViewed ? 'bg-gradient-to-r from-purple-600 to-blue-600' : 'bg-gradient-to-r from-green-400 to-blue-500'}`}
+        className={`group cursor-pointer relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.02] ${hasViewed ? 'bg-light-accent dark:bg-dark-accent' : 'bg-light-accent dark:bg-dark-accent'} border border-light-background-darker dark:border-dark-background-darker`}
         onClick={handleOpenWrapped}
       >
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-black/20 to-black/50" />
-          {/* Animated music waves for visual effect */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end h-20">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-black/10 to-black/20" />
+          {/* Animated stats visualization for visual effect */}
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end h-16 px-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className={`mx-1 w-1.5 bg-white rounded-t-md animate-pulse`}
+                className={`mx-1 w-2 bg-white dark:bg-light-color rounded-t-md animate-pulse`}
                 style={{
-                  height: `${(i % 3 + 1) * 20}%`,
-                  animationDelay: `${i * 0.2}s`,
-                  animationDuration: '1.5s',
+                  height: `${(i % 3 + 1) * 15}%`,
+                  animationDelay: `${i * 0.3}s`,
+                  animationDuration: '2s',
                 }}
               ></div>
             ))}
@@ -433,7 +629,7 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
               {hasViewed ? 'Revisit your semester analytics' : 'NEW! See your semester in review'}
             </p>
           </div>
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm">
             <svg
               className="w-6 h-6 text-white"
               viewBox="0 0 24 24"
@@ -451,7 +647,7 @@ const ClassProWrapped = React.forwardRef<{ setIsOpen: (isOpen: boolean) => void 
           </div>
         </div>
         {!hasViewed && (
-          <div className="absolute top-0 right-0 m-2 px-2 py-1 bg-white rounded-full text-xs font-medium text-purple-600">
+          <div className="absolute top-2 right-2 px-2 py-1 bg-white dark:bg-light-color rounded-full text-xs font-medium text-light-accent dark:text-dark-accent">
             NEW
           </div>
         )}
