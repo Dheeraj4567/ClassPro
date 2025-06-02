@@ -18,6 +18,12 @@ import InstallButton from './Buttons/InstallButton';
 import Popup from './Popup';
 import { useGestures } from '@/hooks/useGesture';
 import ThemeToggle from '@/components/themes/ThemeToggle';
+import { Calendar } from '@/types/Calendar';
+
+// Dynamically import WrappedSidebarLink to reduce initial load time
+const WrappedSidebarLink = dynamic(() => import('./WrappedSidebarLink'), {
+  ssr: false,
+});
 
 // Optimize dynamic imports with loading priority
 const MiniButtons = dynamic(
@@ -49,10 +55,12 @@ export function Sidebar({
   dayorder,
   mini,
   profile,
+  calendar = [],
 }: {
   dayorder: ReactNode;
   mini: ReactNode;
   profile?: ReactNode;
+  calendar?: Calendar[];
 }) {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobileView, setIsMobileView] = useState(false);

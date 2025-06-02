@@ -31,7 +31,6 @@ export default async function fetchCal() {
 
 	if (json.ratelimit) redirect("/ratelimit");
 
-
 	cachedData = json;
 	lastFetchTime = now;
 

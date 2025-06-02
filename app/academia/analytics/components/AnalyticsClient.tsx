@@ -9,6 +9,11 @@ import { Calendar } from "@/types/Calendar";
 import { lightHaptics, mediumHaptics } from "@/utils/haptics";
 import { useMobileView } from "./MobileContext";
 
+// Conditionally import the debug component only in development
+const WrappedDebugger = process.env.NODE_ENV === 'development' 
+  ? dynamic(() => import("./WrappedDebugger"), { ssr: false })
+  : () => null;
+
 // Loading placeholder for better UX
 const AnalyticsLoadingPlaceholder = () => (
   <div className="w-full p-4 animate-pulse">
@@ -294,6 +299,15 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
             )}
           </Suspense>
         </div>
+        
+        {/* Only show the debug component in development mode */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 mb-20">
+            <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
+              <WrappedDebugger calendar={calendar} />
+            </Suspense>
+          </div>
+        )}
       </div>
     </div>
   );

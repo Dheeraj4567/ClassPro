@@ -1,10 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Mark } from "@/types/Marks";
 import { Course } from "@/types/Course";
 import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";
+import { isClassProWrappedAvailable } from "@/utils/semesterTimings";
+import { useWrappedState } from "@/hooks/useWrappedState";
+import { useWrappedData } from "@/hooks/useWrappedData";
+import { mediumHaptics } from "@/utils/haptics";
+import dynamic from "next/dynamic";
+
+// Dynamically import ClassProWrapped to improve initial load time
+const ClassProWrapped = dynamic(() => import("./ClassProWrapped"), {
+  ssr: false,
+});
 
 interface SummaryAnalyticsProps {
   marks?: Mark[];
@@ -19,6 +29,31 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
   attendance = [],
   calendar = []
 }) => {
+  // Reference to the wrapped component for controlling open/close
+  const wrappedRef = useRef<{ setIsOpen: (isOpen: boolean) => void } | null>(null);
+  
+  // Use our custom hooks to manage wrapped data and state
+  const { wrappedAvailability, wrappedData, isDataLoaded } = useWrappedData({
+    marks,
+    courses,
+    attendance,
+    calendar
+  });
+  
+  // Use the wrapped state hook to manage viewed state
+  const { hasViewed, setHasViewed, shouldPrompt } = useWrappedState({
+    isAvailable: wrappedAvailability.isAvailable
+  });
+  
+  // Function to open the ClassProWrapped experience
+  const openWrapped = () => {
+    if (wrappedRef.current) {
+      mediumHaptics();
+      wrappedRef.current.setIsOpen(true);
+      setHasViewed(true);
+    }
+  };
+
   // Calculate overall marks statistics
   const totalMarksScored = marks.reduce((sum, mark) => sum + Number(mark.overall.scored || 0), 0);
   const totalMarksAvailable = marks.reduce((sum, mark) => sum + Number(mark.overall.total || 0), 0);
@@ -200,6 +235,62 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
   return (
     <section id="summary" className="w-full scroll-mt-20">
       <h2 className="text-2xl font-semibold pl-1">Performance Summary</h2>
+      
+      {/* ClassProWrapped availability banner - only shown when available and not dismissed */}
+      {wrappedAvailability.isAvailable && (shouldPrompt || !hasViewed) && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg overflow-hidden relative">
+          {/* Sparkle effects for a more festive look */}
+          <div className="absolute top-0 right-0 w-20 h-20 opacity-30">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="3" fill="white" />
+              <circle cx="80" cy="20" r="2" fill="white" />
+              <circle cx="20" cy="80" r="2" fill="white" />
+              <circle cx="30" cy="40" r="1.5" fill="white" />
+              <circle cx="70" cy="70" r="1.5" fill="white" />
+            </svg>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div>
+              <h3 className="text-white text-lg font-bold">ClassPro Wrapped is here!</h3>
+              <p className="text-white/90 text-sm">
+                Your semester in review. Available for {wrappedAvailability.daysRemaining} more day{wrappedAvailability.daysRemaining !== 1 ? 's' : ''}.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+              <button 
+                onClick={openWrapped}
+                className="px-4 py-2 bg-white text-indigo-600 font-medium rounded-full text-sm hover:bg-opacity-90 transition-all transform hover:scale-105 active:scale-95 shadow-md"
+                aria-label="View your ClassPro Wrapped preview"
+              >
+                Quick View
+              </button>
+              <button 
+                onClick={() => {
+                  mediumHaptics();
+                  setHasViewed(true);
+                  window.location.href = '/academia/wrapped';
+                }}
+                className="px-4 py-2 bg-white/20 text-white border border-white/40 font-medium rounded-full text-sm hover:bg-white/30 transition-all transform hover:scale-105 active:scale-95 shadow-md"
+                aria-label="Go to full ClassPro Wrapped experience"
+              >
+                Full Experience →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ClassProWrapped component - hidden until triggered */}
+      {wrappedAvailability.isAvailable && (
+        <ClassProWrapped 
+          ref={wrappedRef}
+          marks={isDataLoaded ? wrappedData.marks : marks} 
+          courses={isDataLoaded ? wrappedData.courses : courses} 
+          attendance={isDataLoaded ? wrappedData.attendance : attendance} 
+        />
+      )}
+      
       <div className="my-4 p-3 sm:p-5 bg-light-background-normal dark:bg-dark-background-normal rounded-xl shadow-sm">
         {/* Performance Status */}
         <div className="mb-4 sm:mb-6">

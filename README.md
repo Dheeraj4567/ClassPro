@@ -3,7 +3,7 @@
 
 # ClassPro
 ## Better way to manage your academics.
-View, predict, and strategize your success.
+View, predict, and strategize your success. Now with ClassPro Wrapped - your semester in review!
 
 ---
 
