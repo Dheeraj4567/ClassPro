@@ -38,17 +38,20 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
         
         if (isFresh) {
           setAvailability(cachedAvailability);
-          setIsVisible(cachedAvailability.isAvailable);
+          setIsVisible(true); // Always show the component
+          console.log('[ClassPro Wrapped] Using cached availability:', cachedAvailability);
           return;
         }
       } catch (error) {
-        console.error('Error parsing cached wrapped availability:', error);
+        console.error('[ClassPro Wrapped] Error parsing cached wrapped availability:', error);
       }
     }
     
     // If no cached data or cache is stale, calculate it fresh
     if (calendar && calendar.length > 0) {
+      console.log('[ClassPro Wrapped] Calendar data:', calendar);
       const wrappedAvailability = isClassProWrappedAvailable(calendar);
+      console.log('[ClassPro Wrapped] Calculated availability:', wrappedAvailability);
       
       // Cache the calculation with timestamp
       try {
@@ -65,23 +68,33 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
       }
       
       setAvailability(wrappedAvailability);
-      setIsVisible(wrappedAvailability.isAvailable);
+      setIsVisible(true); // Always show the component
+    } else {
+      console.log('[ClassPro Wrapped] No calendar data available');
+      setIsVisible(true); // Still show component even without calendar
     }
   }, [calendar]);
 
   const handleClick = () => {
+    // Only allow navigation if the feature is available
+    if (!availability.isAvailable) {
+      console.log('[ClassPro Wrapped] Feature not available yet. Days remaining:', availability.daysRemaining);
+      return;
+    }
+    
     lightHaptics();
     onClick();
     router.push('/academia/wrapped');
   };
 
-  // If not available, don't render anything
-  if (!isVisible) {
-    return null;
-  }
+  // Always render the component, but style it based on availability
+  // if (!isVisible) {
+  //   return null;
+  // }
 
   // Check if currently on the wrapped page
   const isActive = pathname === '/academia/wrapped';
+  const isAvailable = availability.isAvailable;
 
   return (
     <AnimatePresence>
@@ -93,10 +106,13 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
       >
         <button
           onClick={handleClick}
+          disabled={!isAvailable}
           className={`w-full flex items-center gap-3 rounded-md py-2 px-3 transition-all ${
             isActive
               ? 'bg-light-accent/10 dark:bg-dark-accent/20 text-light-accent dark:text-dark-accent'
-              : 'text-light-color dark:text-dark-color hover:bg-light-background-light dark:hover:bg-dark-background-light'
+              : isAvailable
+                ? 'text-light-color dark:text-dark-color hover:bg-light-background-light dark:hover:bg-dark-background-light'
+                : 'text-light-color/40 dark:text-dark-color/40 cursor-not-allowed'
           }`}
         >
           {/* Animated icon - similar to the music wave animation */}
@@ -104,16 +120,22 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
             {[1, 2, 3].map((i) => (
               <motion.div
                 key={i}
-                className="mx-[1px] w-[3px] bg-gradient-to-t from-light-accent to-purple-500 dark:from-dark-accent dark:to-blue-400 rounded-t-sm"
-                animate={{
+                className={`mx-[1px] w-[3px] rounded-t-sm ${
+                  isAvailable 
+                    ? 'bg-gradient-to-t from-light-accent to-purple-500 dark:from-dark-accent dark:to-blue-400'
+                    : 'bg-light-color/20 dark:bg-dark-color/20'
+                }`}
+                animate={isAvailable ? {
                   height: [`${10 + i * 5}px`, `${20 + i * 8}px`, `${10 + i * 5}px`],
+                } : {
+                  height: `${10 + i * 5}px`
                 }}
-                transition={{
+                transition={isAvailable ? {
                   duration: 0.8 + i * 0.2,
                   repeat: Infinity,
                   repeatType: 'reverse',
                   ease: 'easeInOut',
-                }}
+                } : {}}
               />
             ))}
           </div>
@@ -125,15 +147,21 @@ const WrappedSidebarLink = ({ calendar, onClick }: WrappedSidebarLinkProps) => {
                 : ''
             }`}>ClassPro Wrapped</span>
             <span className="text-xs opacity-70">
-              {availability.daysRemaining === 1
+              {!isAvailable
+                ? 'Coming soon...'
+                : availability.daysRemaining === 1
                 ? 'Last day!'
                 : `${availability.daysRemaining} days left`}
             </span>
           </div>
 
           {/* "NEW" badge */}
-          <span className="ml-auto text-xs px-1.5 py-0.5 rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-400 dark:to-blue-500 text-white">
-            NEW
+          <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-md text-white ${
+            isAvailable 
+              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-400 dark:to-blue-500'
+              : 'bg-gray-400 dark:bg-gray-600'
+          }`}>
+            {isAvailable ? 'NEW' : 'SOON'}
           </span>
         </button>
       </motion.div>
