@@ -20,11 +20,6 @@ import { useGestures } from '@/hooks/useGesture';
 import ThemeToggle from '@/components/themes/ThemeToggle';
 import { Calendar } from '@/types/Calendar';
 
-// Dynamically import WrappedSidebarLink to reduce initial load time
-const WrappedSidebarLink = dynamic(() => import('./WrappedSidebarLink'), {
-  ssr: false,
-});
-
 // Optimize dynamic imports with loading priority
 const MiniButtons = dynamic(
   () => import('./Buttons/MiniButtons'),
@@ -209,8 +204,6 @@ export function Sidebar({
               </span>
             }
           />
-
-          <WrappedSidebarLink calendar={calendar} onClick={handleClick} />
         </div>
 
         <div className='flex flex-col-reverse gap-4'>
