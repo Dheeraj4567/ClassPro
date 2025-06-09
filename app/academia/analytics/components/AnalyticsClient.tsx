@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, startTransition } from "react";
 import dynamic from "next/dynamic";
 import { Mark } from "@/types/Marks";
 import { Course } from "@/types/Course";
@@ -8,6 +8,8 @@ import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";
 import { lightHaptics, mediumHaptics } from "@/utils/haptics";
 import { useMobileView } from "./MobileContext";
+import AnalyticsErrorBoundary from "./AnalyticsErrorBoundary";
+import { usePerformanceMonitor } from "@/utils/PerformanceMonitor";
 
 // Conditionally import the debug component only in development
 const WrappedDebugger = process.env.NODE_ENV === 'development' 
@@ -39,7 +41,7 @@ const AttendanceAnalytics = dynamic(() => import("./AttendanceAnalytics"), {
   loading: () => <AnalyticsLoadingPlaceholder />
 });
 
-// Performance analytics is the heaviest component - prioritize other components loading first
+// Performance analytics is the heaviest component - use intersection observer for loading
 const PerformanceAnalytics = dynamic(() => import("./PerformanceAnalytics"), { 
   ssr: false, 
   loading: () => <AnalyticsLoadingPlaceholder />
@@ -58,16 +60,56 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
   attendance = [],
   calendar = []
 }) => {
+  // Monitor performance of this main analytics component
+  usePerformanceMonitor('AnalyticsClient');
+  
   // Track active section for mobile quick navigation
   const [activeSection, setActiveSection] = useState<string>("summary");
+  // Track which heavy components have been loaded
+  const [loadedSections, setLoadedSections] = useState<Set<string>>(new Set(['summary']));
   // Get mobile view state from context
   const { isMobileView } = useMobileView();
 
   // Define a ref to track programmatic scrolling state
   const isScrollingProgrammaticallyRef = React.useRef(false);
   
-  // Further enhanced effect to handle intersection observer with improved reliability and haptic feedback
-  useEffect(() => {
+  // Memoize scroll function to prevent recreating on every render
+  const scrollToSection = React.useCallback((sectionId: string) => {
+    lightHaptics();
+    
+    const element = document.getElementById(sectionId);
+    if (element) {
+      isScrollingProgrammaticallyRef.current = true;
+      
+      const headerOffset = 70;
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerOffset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      
+      // Use startTransition for non-blocking state update
+      startTransition(() => {
+        setActiveSection(sectionId);
+      });
+      
+      // Update URL hash
+      if (window.history) {
+        const urlWithoutHash = window.location.href.split('#')[0];
+        window.history.replaceState(null, '', `${urlWithoutHash}#${sectionId}`);
+      }
+      
+      // Reset the flag after scroll completes
+      setTimeout(() => {
+        isScrollingProgrammaticallyRef.current = false;
+      }, 1000);
+    }
+  }, []);
+  
+  // Optimize intersection observer with debouncing and performance improvements
+  React.useEffect(() => {
     if (typeof window !== 'undefined') {
       // Only target the specific sections we need to observe
       const sectionIds = ['summary', 'marks', 'attendance', 'performance'];
@@ -114,7 +156,10 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
                 lastActiveSection = id;
               }
               
-              setActiveSection(id);
+              // Use startTransition to make state updates non-blocking
+              startTransition(() => {
+                setActiveSection(id);
+              });
               
               // Update URL hash silently without triggering scroll
               if (window.history) {
@@ -148,8 +193,8 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
     }
   }, [activeSection, isMobileView]);
 
-  // Further enhanced scroll to section handler with improved behavior and haptic feedback
-  const scrollToSection = (sectionId: string) => {
+  // Enhanced scroll to section handler with conditional loading
+  const enhancedScrollToSection = React.useCallback((sectionId: string) => {
     // Add haptic feedback for better touch interaction based on device
     if (isMobileView) {
       mediumHaptics(); // More pronounced haptics on mobile
@@ -157,42 +202,21 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
       lightHaptics(); // Subtle haptics on desktop
     }
     
-    // Update active section state immediately for UI responsiveness
-    setActiveSection(sectionId);
-    
-    const element = document.getElementById(sectionId);
-    if (element) {
-      // Set flag to temporarily ignore intersection observer
-      isScrollingProgrammaticallyRef.current = true;
-      
-      // Calculate scroll position with optimized offsets for better viewing
-      const headerOffset = isMobileView ? 60 : 70;
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - headerOffset;
-      
-      // Use optimized smooth scrolling with better performance
-      try {
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        });
-      } catch (e) {
-        // Fallback for browsers that don't support smooth scrolling
-        window.scrollTo(0, offsetPosition);
-      }
-      
-      // After scrolling is complete, update URL hash without triggering scroll
-      const scrollCompleteTimer = setTimeout(() => {
-        const urlWithoutHash = window.location.href.split('#')[0];
-        window.history.replaceState(null, '', `${urlWithoutHash}#${sectionId}`);
-        
-        // Re-enable intersection observer after scroll completes
-        isScrollingProgrammaticallyRef.current = false;
-      }, isMobileView ? 800 : 600); // Longer timeout on mobile for smoother animations
-      
-      return () => clearTimeout(scrollCompleteTimer);
+    // Load the section if it hasn't been loaded yet
+    if (!loadedSections.has(sectionId)) {
+      startTransition(() => {
+        setLoadedSections(prev => new Set([...prev, sectionId]));
+      });
     }
-  };
+    
+    // Mark performance section as viewed in session storage
+    if (sectionId === 'performance' && typeof window !== 'undefined') {
+      sessionStorage.setItem('viewed-performance', 'true');
+    }
+    
+    // Use the memoized scroll function
+    scrollToSection(sectionId);
+  }, [isMobileView, loadedSections, scrollToSection]);
 
   return (
     <div className="relative pb-24">
@@ -227,7 +251,7 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
             <button 
               key={item.id}
               aria-label={`View ${item.label} section`}
-              onClick={() => scrollToSection(item.id)}
+              onClick={() => enhancedScrollToSection(item.id)}
               className={`flex flex-col items-center justify-center p-1.5 transition-all duration-150 ${
                 activeSection === item.id 
                   ? "text-light-accent dark:text-dark-accent scale-110" 
@@ -249,55 +273,79 @@ const AnalyticsClient: React.FC<AnalyticsClientProps> = ({
       {/* Analytics sections with improved mobile layout */}
       <div className="space-y-6 md:space-y-8 px-2 sm:px-0 mx-auto max-w-full md:max-w-3xl lg:max-w-4xl">
         <div id="summary" className="scroll-mt-16 md:scroll-mt-24">
-          <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
-            <SummaryAnalytics 
-              marks={marks} 
-              courses={courses} 
-              attendance={attendance} 
-              calendar={calendar} 
-            />
-          </Suspense>
-        </div>
-        
-        <div id="marks" className="scroll-mt-16 md:scroll-mt-24">
-          <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
-            <MarksAnalytics marks={marks} courses={courses} />
-          </Suspense>
-        </div>
-        
-        <div id="attendance" className="scroll-mt-16 md:scroll-mt-24">
-          <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
-            <AttendanceAnalytics attendance={attendance} calendar={calendar} />
-          </Suspense>
-        </div>
-        
-        {/* Performance is the heaviest, use an additional delay/lazy strategy */}
-        <div id="performance" className="scroll-mt-16 md:scroll-mt-24">
-          <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
-            {/* Only render PerformanceAnalytics when user is scrolled to this section or has visited it */}
-            {activeSection === 'performance' || (typeof window !== 'undefined' && sessionStorage.getItem('viewed-performance')) ? (
-              <PerformanceAnalytics 
+          <AnalyticsErrorBoundary componentName="Summary Analytics">
+            <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
+              <SummaryAnalytics 
                 marks={marks} 
                 courses={courses} 
                 attendance={attendance} 
                 calendar={calendar} 
               />
-            ) : (
-              <div className="py-6 md:py-8">
-                <button 
-                  onClick={() => {
-                    scrollToSection('performance');
-                    if (typeof window !== 'undefined') {
-                      sessionStorage.setItem('viewed-performance', 'true');
-                    }
-                  }}
-                  className="mx-auto block px-6 py-3 rounded-lg bg-light-accent/10 text-light-accent dark:bg-dark-accent/20 dark:text-dark-accent font-medium"
-                >
-                  Load Performance Analytics
-                </button>
-              </div>
-            )}
-          </Suspense>
+            </Suspense>
+          </AnalyticsErrorBoundary>
+        </div>
+        
+        <div id="marks" className="scroll-mt-16 md:scroll-mt-24">
+          {loadedSections.has('marks') ? (
+            <AnalyticsErrorBoundary componentName="Marks Analytics">
+              <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
+                <MarksAnalytics marks={marks} courses={courses} />
+              </Suspense>
+            </AnalyticsErrorBoundary>
+          ) : (
+            <div className="py-6 md:py-8">
+              <button 
+                onClick={() => enhancedScrollToSection('marks')}
+                className="mx-auto block px-6 py-3 rounded-lg bg-light-accent/10 text-light-accent dark:bg-dark-accent/20 dark:text-dark-accent font-medium"
+              >
+                Load Marks Analytics
+              </button>
+            </div>
+          )}
+        </div>
+        
+        <div id="attendance" className="scroll-mt-16 md:scroll-mt-24">
+          {loadedSections.has('attendance') ? (
+            <AnalyticsErrorBoundary componentName="Attendance Analytics">
+              <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
+                <AttendanceAnalytics attendance={attendance} calendar={calendar} />
+              </Suspense>
+            </AnalyticsErrorBoundary>
+          ) : (
+            <div className="py-6 md:py-8">
+              <button 
+                onClick={() => enhancedScrollToSection('attendance')}
+                className="mx-auto block px-6 py-3 rounded-lg bg-light-accent/10 text-light-accent dark:bg-dark-accent/20 dark:text-dark-accent font-medium"
+              >
+                Load Attendance Analytics
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Performance is the heaviest, use an additional delay/lazy strategy */}
+        <div id="performance" className="scroll-mt-16 md:scroll-mt-24">
+          {(loadedSections.has('performance') || activeSection === 'performance' || (typeof window !== 'undefined' && sessionStorage.getItem('viewed-performance'))) ? (
+            <AnalyticsErrorBoundary componentName="Performance Analytics">
+              <Suspense fallback={<AnalyticsLoadingPlaceholder />}>
+                <PerformanceAnalytics 
+                  marks={marks} 
+                  courses={courses} 
+                  attendance={attendance} 
+                  calendar={calendar} 
+                />
+              </Suspense>
+            </AnalyticsErrorBoundary>
+          ) : (
+            <div className="py-6 md:py-8">
+              <button 
+                onClick={() => enhancedScrollToSection('performance')}
+                className="mx-auto block px-6 py-3 rounded-lg bg-light-accent/10 text-light-accent dark:bg-dark-accent/20 dark:text-dark-accent font-medium"
+              >
+                Load Performance Analytics
+              </button>
+            </div>
+          )}
         </div>
         
         {/* Only show the debug component in development mode */}

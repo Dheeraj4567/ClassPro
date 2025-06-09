@@ -24,7 +24,7 @@ interface SelectedCourseData {
   mark?: Mark; // Original mark data for additional details
 }
 
-const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [] }) => {
+const MarksAnalytics: React.FC<MarksAnalyticsProps> = React.memo(({ marks = [], courses = [] }) => {
   // State to track the selected course for the detailed modal view
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourseData | null>(null);
   // State for chart display orientation on mobile
@@ -447,6 +447,8 @@ const MarksAnalytics: React.FC<MarksAnalyticsProps> = ({ marks = [], courses = [
       </div>
     </section>
   );
-};
+});
+
+MarksAnalytics.displayName = 'MarksAnalytics';
 
 export default MarksAnalytics;

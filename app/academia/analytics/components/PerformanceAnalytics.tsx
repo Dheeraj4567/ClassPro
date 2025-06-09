@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Mark } from "@/types/Marks";
 import { Course } from "@/types/Course";
 import { AttendanceCourse } from "@/types/Attendance";
 import { Calendar } from "@/types/Calendar";
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import VirtualizedChart from "./VirtualizedChart";
+import { usePerformanceMonitor } from "@/utils/PerformanceMonitor";
 
 interface PerformanceAnalyticsProps {
   marks?: Mark[];
@@ -36,47 +38,54 @@ interface RecommendationData {
   actionSteps?: string[];
 }
 
-const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
+const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = React.memo(({
   marks = [],
   courses = [],
   attendance = [],
   calendar = []
 }) => {
+  // Monitor performance of this heavy component
+  usePerformanceMonitor('PerformanceAnalytics');
+  
   // State to track selected course and recommendation for detailed view
   const [selectedCourse, setSelectedCourse] = useState<CoursePerformanceData | null>(null);
   const [selectedRecommendation, setSelectedRecommendation] = useState<RecommendationData | null>(null);
   const [skillInfoVisible, setSkillInfoVisible] = useState<boolean>(false);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
 
-  // Calculate performance data for each course
-  const performanceData = marks.map(mark => {
-    const courseName = mark.courseName.split(':')[0];
-    const attendanceRecord = attendance.find(a => a.courseCode === mark.courseCode);
-    
-    const marksPercentage = Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100;
-    const attendancePercentage = attendanceRecord 
-      ? ((Number(attendanceRecord.hoursConducted) - Number(attendanceRecord.hoursAbsent)) / Number(attendanceRecord.hoursConducted)) * 100
-      : 0;
-    
-    // Calculate an overall performance score
-    const performanceScore = (marksPercentage * 0.7) + (attendancePercentage * 0.3);
-    
-    return {
-      name: courseName,
-      courseCode: mark.courseCode,
-      courseType: mark.courseType,
-      marksPercentage: marksPercentage.toFixed(1),
-      attendancePercentage: attendancePercentage.toFixed(1),
-      performanceScore: performanceScore.toFixed(1),
-      originalMark: mark,
-      originalAttendance: attendanceRecord
-    };
-  });
+  // Memoize performance data calculation to prevent recalculation on every render
+  const performanceData = useMemo(() => {
+    return marks.map(mark => {
+      const courseName = mark.courseName.split(':')[0];
+      const attendanceRecord = attendance.find(a => a.courseCode === mark.courseCode);
+      
+      const marksPercentage = Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100;
+      const attendancePercentage = attendanceRecord 
+        ? ((Number(attendanceRecord.hoursConducted) - Number(attendanceRecord.hoursAbsent)) / Number(attendanceRecord.hoursConducted)) * 100
+        : 0;
+      
+      // Calculate an overall performance score
+      const performanceScore = (marksPercentage * 0.7) + (attendancePercentage * 0.3);
+      
+      return {
+        name: courseName,
+        courseCode: mark.courseCode,
+        courseType: mark.courseType,
+        marksPercentage: marksPercentage.toFixed(1),
+        attendancePercentage: attendancePercentage.toFixed(1),
+        performanceScore: performanceScore.toFixed(1),
+        originalMark: mark,
+        originalAttendance: attendanceRecord
+      };
+    });
+  }, [marks, attendance]);
 
-  // Sort courses by performance score
-  const sortedPerformance = [...performanceData].sort((a, b) => 
-    Number(b.performanceScore) - Number(a.performanceScore)
-  );
+  // Memoize sorted performance to prevent re-sorting on every render
+  const sortedPerformance = useMemo(() => {
+    return [...performanceData].sort((a, b) => 
+      Number(b.performanceScore) - Number(a.performanceScore)
+    );
+  }, [performanceData]);
 
   // Data for the radar chart with click handling for each skill
   const skillData = [
@@ -164,16 +173,16 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
     setSkillInfoVisible(true);
   };
 
-  // Generate some improvement recommendations with expanded details
-  const generateRecommendations = () => {
-    const recommendations = [];
+  // Memoize recommendations calculation to prevent recalculation on every render
+  const recommendations = useMemo(() => {
+    const recs = [];
     
     // Check average marks
     const avgMarks = marks.length > 0 ? marks.reduce((sum, mark) => 
       sum + (Number(mark.overall.scored || 0) / Number(mark.overall.total || 1) * 100), 0) / marks.length : 0;
     
     if (avgMarks < 60) {
-      recommendations.push({
+      recs.push({
         area: "Academic Performance",
         recommendation: "Consider forming study groups or seeking additional help from professors.",
         priority: "High",
@@ -195,7 +204,7 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
     }, 0) / attendance.length : 0;
     
     if (avgAttendance < 75) {
-      recommendations.push({
+      recs.push({
         area: "Attendance",
         recommendation: "Your attendance is below the required minimum. Focus on improving your attendance.",
         priority: "High",
@@ -209,7 +218,7 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         ]
       });
     } else if (avgAttendance < 85) {
-      recommendations.push({
+      recs.push({
         area: "Attendance",
         recommendation: "Your attendance is satisfactory but could be improved.",
         priority: "Medium",
@@ -227,7 +236,7 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
     // Look for courses with poor performance
     const poorPerformanceCourses = performanceData.filter(course => Number(course.performanceScore) < 60);
     if (poorPerformanceCourses.length > 0) {
-      recommendations.push({
+      recs.push({
         area: "Course Focus",
         recommendation: `Focus more attention on courses: ${poorPerformanceCourses.map(c => c.name).join(', ')}`,
         priority: "Medium",
@@ -243,7 +252,7 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
     }
     
     // Always add a positive recommendation
-    recommendations.push({
+    recs.push({
       area: "Time Management",
       recommendation: "Consider using a study planner to organize your study sessions more effectively.",
       priority: "Low",
@@ -251,16 +260,14 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
       details: "Even high-performing students can benefit from improved time management. Research shows that structured study planning can increase productivity by up to 30%.",
       actionSteps: [
         "Try digital tools like Notion, Todoist or Google Calendar for planning",
-        "Use the Pomodoro technique (25 min work, 5 min break)",
-        "Plan your week in advance, allocating specific time blocks for each subject",
-        "Schedule regular reviews of previously learned material"
+        "Block specific time slots for each subject every week",
+        "Use the Pomodoro technique (25 min study, 5 min break)",
+        "Review and adjust your schedule weekly based on what's working"
       ]
     });
     
-    return recommendations;
-  };
-
-  const recommendations = generateRecommendations();
+    return recs;
+  }, [marks, attendance, performanceData]);
 
   // Handle click on a recommendation
   const handleRecommendationClick = (rec: RecommendationData) => {
@@ -279,34 +286,36 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-4">Course Performance Ranking</h3>
           <div className="bg-light-background-light dark:bg-dark-background-light p-4 rounded-lg">
-            <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={sortedPerformance}
-                  layout="vertical"
-                  margin={{ top: 10, right: 30, left: 60, bottom: 10 }}
-                  onClick={(data) => data?.activePayload && handleCourseClick(data.activePayload[0].payload)}
-                >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    width={100}
-                    tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
-                  />
-                  <Tooltip />
-                  <Legend />
-                  <Bar 
-                    name="Overall Performance" 
-                    dataKey="performanceScore" 
-                    fill="var(--color-light-accent)"
-                    className="dark:fill-dark-accent cursor-pointer"
-                    barSize={20}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <VirtualizedChart height={320} className="w-full">
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={sortedPerformance}
+                    layout="vertical"
+                    margin={{ top: 10, right: 30, left: 60, bottom: 10 }}
+                    onClick={(data) => data?.activePayload && handleCourseClick(data.activePayload[0].payload)}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                    <XAxis type="number" domain={[0, 100]} />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={100}
+                      tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                    />
+                    <Tooltip />
+                    <Legend />
+                    <Bar 
+                      name="Overall Performance" 
+                      dataKey="performanceScore" 
+                      fill="var(--color-light-accent)"
+                      className="dark:fill-dark-accent cursor-pointer"
+                      barSize={20}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </VirtualizedChart>
             <p className="text-xs text-light-color/60 dark:text-dark-color/60 text-center mt-2">
               Click on any bar to see detailed performance information
             </p>
@@ -319,33 +328,35 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-light-background-light dark:bg-dark-background-light p-4 rounded-lg">
               <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-3">Your Skills Radar</h4>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart 
-                    outerRadius={90} 
-                    data={skillData}
-                    onClick={(data) => data?.activePayload && handleSkillClick(data.activePayload[0].payload.subject)}
-                  >
-                    <PolarGrid />
-                    <PolarAngleAxis 
-                      dataKey="subject" 
-                      tick={{ 
-                        fill: "var(--color-light-color)", 
-                        className: "dark:fill-dark-color cursor-pointer" 
-                      }}
-                    />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                    <Radar 
-                      name="Your Skills" 
-                      dataKey="A" 
-                      stroke="var(--color-light-accent)" 
-                      fill="var(--color-light-accent)" 
-                      fillOpacity={0.6} 
-                      className="dark:stroke-dark-accent dark:fill-dark-accent cursor-pointer"
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+              <VirtualizedChart height={256} className="w-full">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart 
+                      outerRadius={90} 
+                      data={skillData}
+                      onClick={(data) => data?.activePayload && handleSkillClick(data.activePayload[0].payload.subject)}
+                    >
+                      <PolarGrid />
+                      <PolarAngleAxis 
+                        dataKey="subject" 
+                        tick={{ 
+                          fill: "var(--color-light-color)", 
+                          className: "dark:fill-dark-color cursor-pointer" 
+                        }}
+                      />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                      <Radar 
+                        name="Your Skills" 
+                        dataKey="A" 
+                        stroke="var(--color-light-accent)" 
+                        fill="var(--color-light-accent)" 
+                        fillOpacity={0.6} 
+                        className="dark:stroke-dark-accent dark:fill-dark-accent cursor-pointer"
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </VirtualizedChart>
               <p className="text-xs text-light-color/60 dark:text-dark-color/60 text-center mt-2">
                 Click on any skill to see details and improvement tips
               </p>
@@ -353,42 +364,44 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             
             <div className="bg-light-background-light dark:bg-dark-background-light p-4 rounded-lg">
               <h4 className="text-sm font-medium text-light-accent dark:text-dark-accent mb-3">Performance Trend</h4>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart 
-                    data={performanceData} 
-                    margin={{ top: 10, right: 30, left: 0, bottom: 30 }}
-                    onClick={(data) => data?.activePayload && handleCourseClick(data.activePayload[0].payload)}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={60}
-                      tickFormatter={(value) => value.length > 8 ? `${value.substring(0, 8)}...` : value}
-                    />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="marksPercentage" 
-                      name="Marks %" 
-                      stroke="var(--color-light-error-color)" 
-                      className="dark:stroke-dark-error-color cursor-pointer"
-                      activeDot={{ r: 8 }} 
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="attendancePercentage" 
-                      name="Attendance %" 
-                      stroke="var(--color-light-success-color)" 
-                      className="dark:stroke-dark-success-color cursor-pointer"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <VirtualizedChart height={256} className="w-full">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart 
+                      data={performanceData} 
+                      margin={{ top: 10, right: 30, left: 0, bottom: 30 }}
+                      onClick={(data) => data?.activePayload && handleCourseClick(data.activePayload[0].payload)}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                      <XAxis 
+                        dataKey="name" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={60}
+                        tickFormatter={(value) => value.length > 8 ? `${value.substring(0, 8)}...` : value}
+                      />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="marksPercentage" 
+                        name="Marks %" 
+                        stroke="var(--color-light-error-color)" 
+                        className="dark:stroke-dark-error-color cursor-pointer"
+                        activeDot={{ r: 8 }} 
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="attendancePercentage" 
+                        name="Attendance %" 
+                        stroke="var(--color-light-success-color)" 
+                        className="dark:stroke-dark-success-color cursor-pointer"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </VirtualizedChart>
             </div>
           </div>
         </div>
@@ -742,6 +755,8 @@ const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
       </div>
     </section>
   );
-};
+});
+
+PerformanceAnalytics.displayName = 'PerformanceAnalytics';
 
 export default PerformanceAnalytics;

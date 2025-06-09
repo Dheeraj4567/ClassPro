@@ -23,7 +23,7 @@ interface SummaryAnalyticsProps {
   calendar?: Calendar[];
 }
 
-const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
+const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = React.memo(({
   marks = [],
   courses = [],
   attendance = [],
@@ -46,13 +46,13 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
   });
   
   // Function to open the ClassProWrapped experience
-  const openWrapped = () => {
+  const openWrapped = React.useCallback(() => {
     if (wrappedRef.current) {
       mediumHaptics();
       wrappedRef.current.setIsOpen(true);
       setHasViewed(true);
     }
-  };
+  }, [setHasViewed]);
 
   // Calculate overall marks statistics
   const totalMarksScored = marks.reduce((sum, mark) => sum + Number(mark.overall.scored || 0), 0);
@@ -391,6 +391,8 @@ const SummaryAnalytics: React.FC<SummaryAnalyticsProps> = ({
       </div>
     </section>
   );
-};
+});
+
+SummaryAnalytics.displayName = 'SummaryAnalytics';
 
 export default SummaryAnalytics;

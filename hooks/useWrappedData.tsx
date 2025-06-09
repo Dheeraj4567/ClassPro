@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Mark } from '@/types/Marks';
 import { Course } from '@/types/Course';
 import { AttendanceCourse } from '@/types/Attendance';
@@ -36,77 +36,91 @@ export const useWrappedData = ({ marks, courses, attendance, calendar }: UseWrap
   
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   
-  // Check ClassProWrapped availability and handle data caching
-  useEffect(() => {
-    if (calendar && calendar.length > 0) {
-      const availability = isClassProWrappedAvailable(calendar);
-      setWrappedAvailability(availability);
-      
-      // Find the month string for the last working day
-      let monthString: string | undefined;
-      if (availability.lastWorkingDay && calendar.length > 0) {
-        // Find the month that contains the last working day
-        for (const monthData of calendar) {
-          const hasLastWorkingDay = monthData.days.some((day: any) => 
-            day.date === availability.lastWorkingDay!.date && 
-            day.event?.includes("Last Working Day")
-          );
-          if (hasLastWorkingDay) {
-            monthString = monthData.month;
-            break;
-          }
-        }
-      }
-      
-      // If we have a last working day, manage the wrapped data
-      if (availability.lastWorkingDay) {
-        // Check if we already have cached data
-        const cachedData = getCachedWrappedData(availability.lastWorkingDay, monthString);
-        
-        if (cachedData) {
-          // Use cached data if available (priority)
-          console.log('Using cached Wrapped data from previous snapshot');
-          setWrappedData(cachedData);
-          setIsDataLoaded(true);
-        } else {
-          // Determine whether we should cache current data
-          const shouldCache = availability.daysUntilLastWorkingDay !== undefined && 
-                             (availability.daysUntilLastWorkingDay <= 0);
-          
-          // Determine whether we can use current data
-          // We can use current data if:
-          // 1. We're before or on the last working day, OR
-          // 2. It's the first day after the last working day and we need to create a cache
-          const canUseCurrentData = availability.daysUntilLastWorkingDay === undefined || 
-                                   availability.daysUntilLastWorkingDay >= 0 ||
-                                   (availability.daysRemaining === 10); // First day after last working day
-          
-          if (canUseCurrentData) {
-            // Use current data
-            const newData = {
-              marks: [...marks],
-              courses: [...courses],
-              attendance: [...attendance]
-            };
-            
-            setWrappedData(newData);
-            setIsDataLoaded(true);
-            
-            // Cache data if needed
-            if (shouldCache) {
-              console.log('Caching Wrapped data snapshot for this semester');
-              cacheWrappedData(marks, courses, attendance, availability.lastWorkingDay, monthString);
-            }
-          } else {
-            // We're past the last working day and don't have cached data
-            // This is an error state - we should have created a cache on the last working day
-            console.error('No cached data available for previous semester Wrapped');
-            setIsDataLoaded(false);
-          }
-        }
+  // Memoize availability calculation to prevent recalculation
+  const availability = useMemo(() => {
+    if (!calendar || calendar.length === 0) {
+      return { isAvailable: false };
+    }
+    return isClassProWrappedAvailable(calendar);
+  }, [calendar]);
+  
+  // Memoize month string calculation
+  const monthString = useMemo(() => {
+    if (!availability.lastWorkingDay || !calendar.length) return undefined;
+    
+    for (const monthData of calendar) {
+      const hasLastWorkingDay = monthData.days.some((day: any) => 
+        day.date === availability.lastWorkingDay!.date &&
+        day.event?.includes("Last Working Day")
+      );
+      if (hasLastWorkingDay) {
+        return monthData.month;
       }
     }
-  }, [calendar, marks, courses, attendance]);
+    return undefined;
+  }, [availability.lastWorkingDay, calendar]);
+  
+  // Memoize cached data retrieval
+  const cachedData = useMemo(() => {
+    if (!availability.lastWorkingDay) return null;
+    return getCachedWrappedData(availability.lastWorkingDay, monthString);
+  }, [availability.lastWorkingDay, monthString]);
+  
+  // Memoize data processing function
+  const processWrappedData = useCallback(() => {
+    if (!availability.lastWorkingDay) return;
+    
+    if (cachedData) {
+      // Use cached data if available (priority)
+      console.log('Using cached Wrapped data from previous snapshot');
+      setWrappedData(cachedData);
+      setIsDataLoaded(true);
+      return;
+    }
+    
+    // Determine whether we should cache current data
+    const shouldCache = availability.daysUntilLastWorkingDay !== undefined && 
+                       (availability.daysUntilLastWorkingDay <= 0);
+    
+    // Determine whether we can use current data
+    const canUseCurrentData = availability.daysUntilLastWorkingDay === undefined || 
+                             availability.daysUntilLastWorkingDay >= 0 ||
+                             (availability.daysRemaining === 10); // First day after last working day
+    
+    if (canUseCurrentData) {
+      // Use current data
+      const newData = {
+        marks: [...marks],
+        courses: [...courses],
+        attendance: [...attendance]
+      };
+      
+      setWrappedData(newData);
+      setIsDataLoaded(true);
+      
+      // Cache data if needed
+      if (shouldCache) {
+        console.log('Caching Wrapped data snapshot for this semester');
+        cacheWrappedData(marks, courses, attendance, availability.lastWorkingDay, monthString);
+      }
+    } else {
+      // We're past the last working day and don't have cached data
+      console.error('No cached data available for previous semester Wrapped');
+      setIsDataLoaded(false);
+    }
+  }, [availability, cachedData, marks, courses, attendance, monthString]);
+  
+  // Update availability when it changes
+  useEffect(() => {
+    setWrappedAvailability(availability);
+  }, [availability]);
+  
+  // Process data when dependencies change
+  useEffect(() => {
+    if (calendar && calendar.length > 0 && marks.length > 0) {
+      processWrappedData();
+    }
+  }, [calendar, marks, courses, attendance, processWrappedData]);
   
   return {
     wrappedAvailability,

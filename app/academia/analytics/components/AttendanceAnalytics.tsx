@@ -22,7 +22,7 @@ interface SelectedCourseData {
   attendancePercentage: number;
 }
 
-const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = [], calendar = [] }) => {
+const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = React.memo(({ attendance = [], calendar = [] }) => {
   // State to track the selected course for detailed view
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourseData | null>(null);
   // State for chart display orientation on mobile
@@ -516,6 +516,8 @@ const AttendanceAnalytics: React.FC<AttendanceAnalyticsProps> = ({ attendance = 
       </div>
     </section>
   );
-};
+});
+
+AttendanceAnalytics.displayName = 'AttendanceAnalytics';
 
 export default AttendanceAnalytics;
