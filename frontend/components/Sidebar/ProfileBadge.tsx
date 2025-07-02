@@ -20,8 +20,7 @@ const UserDialog = dynamic(
 export default function ProfileBadge({
 	className,
 	user,
-	subscribed,
-}: { className?: string; user: UserInfo; subscribed: boolean }) {
+}: { className?: string; user: UserInfo; }) {
 	const router = useRouter();
 	const { theme } = useTheme();
 
@@ -47,9 +46,6 @@ export default function ProfileBadge({
 
 	return (
 		<div className="flex flex-col gap-4">
-			{!subscribed && <Link href="/subscribe" className={`px-5 py-2 flex items-center justify-center lg:w-[82%] gap-3 rounded-xl font-semibold bg-light-warn-background dark:bg-dark-warn-background text-light-warn-color dark:text-dark-warn-color`}>
-				<FaCrown className="inline text-xl" /> Support us
-			</Link>}
 			<div
 				aria-haspopup="dialog"
 				// biome-ignore lint/a11y/useSemanticElements: this acts as backdrop
@@ -68,20 +64,7 @@ export default function ProfileBadge({
 					style={{ backgroundColor: profileColor(user?.regNumber as string) }}
 				>
 					<span className="text-lg font-semibold">
-						{subscribed ? (
-							<FaCrown className="text-black" />
-						) : theme === "Batman" ? (
-							<Image
-								className="mt-1"
-								src="/images/batman.svg"
-								alt="Batman"
-								width={40}
-								height={40}
-								style={{ width: "auto", height: "40px" }}
-							/>
-						) : (
-							<FaUser className="text-black" />
-						)}
+						<FaUser className="text-black" />
 					</span>
 				</div>
 				<span className="text-md line-clamp-1 grow text-ellipsis font-medium capitalize text-light-accent dark:text-dark-color">

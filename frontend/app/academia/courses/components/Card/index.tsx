@@ -7,7 +7,7 @@ import { searchUrl } from "@/misc/faculties";
 import Credit from "./Credit";
 import CourseTitle from "./CourseTitle";
 
-export default function CourseCard({ course, subscribed }: { course: Course; subscribed: boolean; }) {
+export default function CourseCard({ course }: { course: Course; }) {
 	const urls = searchUrl(course.faculty.split("(")[0]);
 	const url = urls[0]?.url;
 
@@ -36,7 +36,7 @@ export default function CourseCard({ course, subscribed }: { course: Course; sub
 				className="hidden w-[20%] lg:flex"
 			/>
 			<CourseCode code={course.code} className="hidden md:flex" />
-			{subscribed ? <Link
+			<Link
 				href={url?.url || ""}
 				target="_blank"
 				title={course.faculty.split("(")[0]}
@@ -44,7 +44,7 @@ export default function CourseCard({ course, subscribed }: { course: Course; sub
 				className={`${url?.url ? "decoration-2 underline decoration-light-info-color dark:decoration-dark-info-color " : ""} mb-1 ml-1 mt-4 text-left self-end md:self-center text-base font-medium text-light-color opacity-90 md:mb-0 md:ml-0 md:mt-0 md:w-[20%] md:text-right lg:my-3 lg:mr-3 dark:text-dark-color`}
 			>
 				{course.faculty.split("(")[0]}
-			</Link> : <p className={`mb-1 ml-1 mt-4 text-left self-end md:self-center text-base font-medium text-light-color opacity-90 md:mb-0 md:ml-0 md:mt-0 md:w-[20%] md:text-right lg:my-3 lg:mr-3 dark:text-dark-color`}>{course.faculty.split("(")[0]}</p>}
+			</Link>
 			<CourseCode
 				code={course.code}
 				className="h-fit w-fit self-end justify-self-end md:hidden"

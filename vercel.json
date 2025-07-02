@@ -5,6 +5,34 @@
 	"regions": ["bom1"],
 	"cleanUrls": true,
 	"framework": "nextjs",
+	"functions": {
+		"frontend/app/api/*/route.{js,ts}": {
+			"maxDuration": 10
+		},
+		"frontend/app/**/route.{js,ts}": {
+			"maxDuration": 10
+		}
+	},
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "public, max-age=3600, stale-while-revalidate=86400"
+				}
+			]
+		},
+		{
+			"source": "/api/(.*)",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "public, max-age=300, stale-while-revalidate=600"
+				}
+			]
+		}
+	],
 	"redirects": [
 		{
 			"source": "/courses",

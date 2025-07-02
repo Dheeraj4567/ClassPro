@@ -18,14 +18,14 @@ export default function AttendanceDetails({
 		>
 			<div className="flex items-center font-medium">
 				<span className="rounded-l-full bg-light-success-background px-3 text-light-success-color dark:bg-dark-success-background dark:text-dark-success-color">
-					{present}
+					{String(present)}
 				</span>
 				<span className="rounded-r-full bg-light-error-background px-3 text-light-error-color dark:bg-dark-error-background dark:text-dark-error-color">
-					{absent}
+					{String(absent)}
 				</span>
 			</div>
 			<span className="rounded-full bg-light-color px-3 font-bold text-light-background-light opacity-80 dark:bg-dark-color dark:text-dark-background-dark">
-				{total}
+				{String(total)}
 			</span>
 		</div>
 	);

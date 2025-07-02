@@ -72,7 +72,7 @@ export default function Demo() {
 					/>
 				}
 				profile={
-					<ProfileBadge user={json?.user as UserInfo} subscribed={false} />
+					<ProfileBadge user={json?.user as UserInfo} />
 				}
 			/>
 			<div

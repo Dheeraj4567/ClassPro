@@ -23,15 +23,46 @@ const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	compress: true,
 	eslint: { ignoreDuringBuilds: true },
+	images: {
+		formats: ['image/webp', 'image/avif'],
+		minimumCacheTTL: 7200,
+	},
+	output: 'standalone',
 	webpack(config) {
-    config.resolve.alias['@radix-ui/react-use-effect-event'] =
-      path.resolve(__dirname, 'stubs/use-effect-event.js');
-    return config;
-  },
+		config.resolve.alias['@radix-ui/react-use-effect-event'] =
+			path.resolve(__dirname, 'stubs/use-effect-event.js');
+		
+		return config;
+	},
 	experimental: {
 		reactCompiler: true,
 		nextScriptWorkers: true,
 		viewTransition: true,
+		ppr: 'incremental',
+		staticGenerationMaxConcurrency: 8,
+	},
+	async headers() {
+		return [
+			{
+				source: '/(.*)',
+				headers: [
+					{
+						key: 'Cache-Control',
+						value: 'public, max-age=3600, stale-while-revalidate=86400',
+					},
+				],
+			},
+			{
+				source: '/api/(.*)',
+				headers: [
+					{
+						key: 'Cache-Control',
+						value: 'public, max-age=300, stale-while-revalidate=600',
+					},
+				],
+			},
+		];
 	},
 };
+
 export default withSerwist(nextConfig);

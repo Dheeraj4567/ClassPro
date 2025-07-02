@@ -1,9 +1,9 @@
 import React, { Suspense } from "react";
 import Prediction from "./Prediction";
 import type { AllResponse } from "@/types/Response";
-import { fetchCalendar } from "@/hooks/fetchCalendar";
+
+import { CalendarResponse } from "@/types/Calendar";
 import Loading from "@/components/States/Loading";
-import { supabase } from "@/utils/Database/supabase";
 
 export const months = [
 	"Jan",
@@ -20,8 +20,7 @@ export const months = [
 	"Dec",
 ];
 
-export default async function Attendance({ data }: { data: AllResponse }) {
-	const cal = await fetchCalendar();
+export default function Attendance({ data, cal }: { data: AllResponse, cal: CalendarResponse }) {
 
 	if (!cal || !cal?.calendar) return (
 		<>
@@ -33,8 +32,6 @@ export default async function Attendance({ data }: { data: AllResponse }) {
 			</section>
 		</>
 	);
-
-	const subscribed = true
 
 	const mappedCal = cal.calendar?.flatMap((day) => {
 		const month = months.findIndex(
@@ -66,7 +63,6 @@ export default async function Attendance({ data }: { data: AllResponse }) {
 							data={data} 
 							cal={mappedCal} 
 							calendar={cal.calendar}
-							subscribed={subscribed}
 						/>
 					</Suspense>
 				</div>

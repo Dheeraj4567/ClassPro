@@ -14,7 +14,6 @@ export default async function RootLayout({
 }>) {
 	const json = await fetchUserData();
 
-	const subscribed = true;
 	return (
 		<div className="h-screen shrink-0 w-full flex flex-row bg-light-background-normal lg:p-2 transition-all duration-150 text-light-color dark:bg-dark-background-normal dark:text-dark-color">
 			<div id="attendance-predict" className="z-30" />
@@ -37,7 +36,6 @@ export default async function RootLayout({
 					) : (
 						<ProfileBadge
 							user={json?.user as UserInfo}
-							subscribed={subscribed}
 						/>
 					)
 				}

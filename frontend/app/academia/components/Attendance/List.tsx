@@ -2,14 +2,13 @@ import type { AttendanceCourse } from "@/types/Attendance";
 import React, { Suspense } from "react";
 import AttendanceCard from "./Card";
 import Indicator from "@/components/Indicator";
-import Loading from "@/components/States/Loading";
 
 export default function List({
 	list,
 	continuous,
 }: { list: AttendanceCourse[]; continuous?: boolean }) {
 	return (
-		<Suspense fallback={<Loading size="xl" />}>
+		<Suspense>
 			<div
 				className={
 					list?.filter((a) => a.category === "Practical")[0] ? "mb-4" : ""

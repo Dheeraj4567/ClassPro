@@ -1,6 +1,7 @@
+import type { Day } from "@/types/Calendar";
 import { ImageResponse } from "next/og";
-import { Day } from "@/types/Calendar";
 import { fetchCalendar } from "@/hooks/fetchCalendar";
+import { NextRequest } from "next/server";
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const months = [
@@ -18,33 +19,18 @@ const months = [
 	"December",
 ];
 
-export async function GET(request: Request) {
-	const geist = await fetch(
-		new URL("../../../public/fonts/Geist.ttf", import.meta.url),
-	).then((res) => res.arrayBuffer());
-
+export async function GET(request: NextRequest) {
 	try {
-		const calendar = await fetchCalendar()
-		const params = new URL(request.url).searchParams;
-		const monthParam = params.get("month");
-		const monthIndex = monthParam ? (Number.parseInt(monthParam) >= calendar.calendar.length  ? calendar.index : Number.parseInt(monthParam)) : calendar.index;
-		if (!calendar)
-			return new Response(
-				JSON.stringify({
-					message:
-						"Hmm, An error occured while grabbing your calendar data. Logout and login again.",
-					fix: "Logout and retry. Its better be old expired cookies 🍪",
-				}),
-				{
-					status: 500,
-					headers: {
-						"content-type": "application/json",
-					},
-				},
-			);
+		const { searchParams } = new URL(request.url);
+		const monthIndex = parseInt(searchParams.get("month") || "0");
 
-		const month = calendar.calendar[monthIndex]?.month;
-		const days = calendar.calendar[monthIndex]?.days;
+		const { calendar } = await fetchCalendar();
+		const month = calendar[monthIndex]?.month || calendar[0]?.month;
+		const days = calendar[monthIndex]?.days || calendar[0]?.days;
+
+		const geist = await fetch(
+			new URL("../../../public/fonts/Geist.ttf", import.meta.url),
+		).then((res) => res.arrayBuffer());
 
 		const getFirstDayIndex = () => weekdays.indexOf(days[0]?.day);
 
@@ -96,8 +82,9 @@ export async function GET(request: Request) {
 					},
 				],
 				headers: {
-					"Accept-Encoding": "gzip, deflate, br, zstd",
-					"cache-control": "private, maxage=86400",
+					"Cache-Control": "public, max-age=7200, stale-while-revalidate=86400",
+					"CDN-Cache-Control": "max-age=7200",
+					"Vercel-CDN-Cache-Control": "max-age=7200",
 				},
 			},
 		);
@@ -110,14 +97,16 @@ export async function GET(request: Request) {
 			{
 				status: 500,
 				statusText: "Server Error",
+				headers: {
+					"Cache-Control": "no-cache",
+				},
 			},
 		);
 	}
 }
-export const runtime = "edge";
 
 function DayCell({ day }: { day: Day }) {
-	const isErrorDay = day.dayOrder === "-";
+	const isErrorDay = day?.dayOrder === "-";
 
 	return (
 		<div
@@ -148,11 +137,16 @@ interface DateDisplayProps {
 
 const DateDisplay: React.FC<DateDisplayProps> = ({
 	date,
-	isToday,
 	isErrorDay,
 }) => (
-	<div tw={`flex ${isErrorDay && !isToday ? "text-[#F75B5B]" : "text-white opacity-70"}`}>
-		<h2 tw="rounded-full flex text-right text-3xl font-bold">{date}</h2>
+	<div tw="flex flex-col">
+		<h3
+			tw={`text-4xl font-bold ${
+				isErrorDay ? "text-[#FF6B6B]" : "text-white"
+			}`}
+		>
+			{date}
+		</h3>
 	</div>
 );
 
@@ -168,8 +162,11 @@ const EventDisplay: React.FC<EventDisplayProps> = ({
 	if (!holiday) return null;
 	return (
 		<p
-			style={{ whiteSpace: "break-spaces" }}
-			tw={`text-left pr-1 -mb-0.5 -mx-2 text-base ${isErrorDay ? "text-[#F75B5B]" : "rounded-md border-l-2 border-r-0 border-[#7CB3EB] bg-[#1B1D2B] px-1 py-0.5 pl-2 text-[#7CB3EB] opacity-70"}`}
+			tw={`text-sm ${
+				isErrorDay ? "text-[#FF6B6B]" : "text-[#7DD3FC]"
+			} px-2 py-1 rounded border-l-2 ${
+				isErrorDay ? "border-[#FF6B6B]" : "border-[#7DD3FC]"
+			} bg-opacity-20 max-w-[250px]`}
 		>
 			{holiday.replaceAll(",", ", ")}
 		</p>
@@ -186,11 +183,10 @@ const DayOrderDisplay: React.FC<DayOrderDisplayProps> = ({
 }) => {
 	if (dayOrder === "-") return null;
 	return (
-		<h2 tw="w-full pl-1 -mb-0.5 text-xl text-white opacity-70 font-medium text-left">
-			Day Order{" "}
-			<span tw={`ml-2 font-bold`}>
-				{dayOrder}
-			</span>
+		<h2 tw="text-right text-2xl font-bold text-white">
+			Day Order {dayOrder}
 		</h2>
 	);
 };
+
+export const runtime = "edge";

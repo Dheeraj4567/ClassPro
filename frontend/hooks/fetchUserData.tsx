@@ -15,7 +15,7 @@ async function fetchData(): Promise<AllResponse> {
 
 	const cachedData = dataCache.get(userKey);
 	const now = Date.now();
-	if (cachedData && now - cachedData.timestamp < 2 * 60 * 1000) {
+	if (cachedData && now - cachedData.timestamp < 5 * 60 * 1000) {
 		return cachedData.data;
 	}
 
@@ -31,7 +31,7 @@ async function fetchData(): Promise<AllResponse> {
 			method: "GET",
 			cache: "force-cache",
 			next: {
-				revalidate: 60,
+				revalidate: 120,
 			},
 			headers: {
 				"Content-Type": "application/json",
@@ -59,7 +59,7 @@ async function fetchData(): Promise<AllResponse> {
 			timestamp: now,
 		});
 
-		if (dataCache.size > 100) {
+		if (dataCache.size > 50) {
 			const oldEntries = Array.from(dataCache.entries()).filter(
 				([_, value]) => now - value.timestamp > 10 * 60 * 1000,
 			);

@@ -1,14 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Analytics } from "@vercel/analytics/react";
 
 import "./globals.css";
 import { ThemeProvider } from "@/provider/ThemeProvider";
 import { Themes } from "@/misc/theme";
 import { ViewTransitions } from "next-view-transitions";
 import ErrorBoundary from "./Boundary";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { ReactNode } from "react";
 import Script from "next/script";
 
@@ -124,8 +122,12 @@ export default async function RootLayout({
 						/>
 
 						<body className="h-screen">
-							<Analytics />
-							<SpeedInsights />
+							<Script
+								defer
+								src="https://static.cloudflareinsights.com/beacon.min.js"
+								data-cf-beacon='{"token": "be7e879176fc4899a6d71d2cf9383fd5"}'
+								strategy="afterInteractive"
+							/>
 
 							{children}
 						</body>

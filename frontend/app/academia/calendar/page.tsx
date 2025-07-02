@@ -12,14 +12,10 @@ export default async function Calendar() {
 	const { calendar, index } = await fetchCalendar();
 	const { user } = await fetchUserData();
 
-	const subscribed = true;
-	const subscribedSince = Date.now();
-
-
 	return (
 		<main className="pb-3">
 			<Suspense fallback={<Loading size="xl" />}>
-				<CalendarGrid freesub={false} subscribed={subscribed} subscribedSince={subscribedSince} calendar={calendar} index={index} isDownload={false} />
+				<CalendarGrid freesub={false} calendar={calendar} index={index} isDownload={false} />
 			</Suspense>
 		</main>
 	);

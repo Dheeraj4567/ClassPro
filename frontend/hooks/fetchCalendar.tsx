@@ -8,7 +8,7 @@ import { cache } from "react";
 
 let cachedData: CalendarResponse | null = null;
 let lastFetchTime: number | null = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 10 * 60 * 1000;
 
 export default async function fetchCal() {
 	const now = Date.now();
@@ -19,6 +19,10 @@ export default async function fetchCal() {
 	const cookie = (await cookies()).get("key");
 	const a = await fetch(`${rotateUrl()}/calendar`, {
 		method: "GET",
+		cache: "force-cache",
+		next: {
+			revalidate: 1800, // 30 minutes
+		},
 		headers: {
 			"Content-Type": "application/json",
 			"X-CSRF-Token": cookie?.value ?? "",
@@ -30,7 +34,6 @@ export default async function fetchCal() {
 	const json: CalendarResponse = await a.json();
 
 	if (json.ratelimit) redirect("/ratelimit");
-
 
 	cachedData = json;
 	lastFetchTime = now;

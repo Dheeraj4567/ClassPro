@@ -25,16 +25,12 @@ const months = [
 export default function CalendarGrid({
 	calendar,
 	isDownload,
-	subscribedSince,
-	subscribed,
 	freesub,
 	index,
 }: {
 	calendar: Calendar[];
 	isDownload: boolean;
-	subscribedSince: number;
 	freesub: boolean;
-	subscribed: boolean;
 	index: number;
 }) {
 	
@@ -106,23 +102,13 @@ export default function CalendarGrid({
 							<FaChevronRight className="text-white text-lg" />
 						</button>
 					</div>
-					{(freesub ? true : (subscribed && subscribedSince && (new Date().getTime() - subscribedSince) < (30 * 24 * 60 * 60 * 1000)) )? (
-						<a
+					<a
 						href={`/api/calendar?month=${month}`}
 						download={`${months[month]}-ClassPro.png`}
 						className="p-1 rounded-lg transition-all duration-150 hover:bg-light-button dark:hover:bg-dark-button"
 					>
 						<FiDownload className="text-lg text-light-accent dark:text-dark-accent cursor-pointer" />
 					</a>
-					) : (
-						<a
-							href="/payment"
-							className="p-1 rounded-lg transition-all border border-light-warn-color dark:border-dark-warn-color duration-150 hover:bg-light-button dark:hover:bg-dark-button opacity-50"
-						>
-							<FiDownload className="text-lg text-light-accent dark:text-dark-accent cursor-not-allowed" />
-						</a>
-					)}
-					
 				</div>
 				<div className=" hidden text-center font-bold 2xl:grid 2xl:grid-cols-7 2xl:gap-4">
 					{weekdays.map((weekday) => (

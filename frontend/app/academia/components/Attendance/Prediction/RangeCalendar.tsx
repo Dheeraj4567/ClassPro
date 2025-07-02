@@ -18,14 +18,12 @@ interface LeaveOdRangeCalendarProps {
     categorizedRanges: CategorizedDateRange[];
     setCategorizedRanges: React.Dispatch<React.SetStateAction<CategorizedDateRange[]>>;
     calendar: CalendarType[];
-    isSubscribed?: boolean; // Add this prop
 }
 
 export function LeaveODRangeCalendar({
     categorizedRanges,
     setCategorizedRanges,
     calendar,
-    isSubscribed = false, // Default to false
 }: LeaveOdRangeCalendarProps) {
 	const [dateRange, setDateRange] = React.useState<{
 		from: Date | undefined;
@@ -41,14 +39,6 @@ export function LeaveODRangeCalendar({
 		if (window.navigator.vibrate) {
 			window.navigator.vibrate(30);
 		}
-		if (!isSubscribed && categorizedRanges.length >= 1) {
-            alert("Please subscribe to add more ranges");
-            return;
-        }
-        if (!isSubscribed && category === "OD") {
-            alert("OD/ML feature is available for premium users only");
-            return;
-        }
 		if (dateRange.from && dateRange.to) {
 			const newRange = { from: dateRange.from, to: dateRange.to, category };
 
@@ -268,12 +258,11 @@ export function LeaveODRangeCalendar({
 						!dateRange.from ||
 						!dateRange.to ||
 						dateRange.from < today ||
-						dateRange.to < today ||
-						(!isSubscribed && categorizedRanges.length >= 1)
-					} 
+						dateRange.to < today
+					}
 					className="flex-1 rounded-lg py-2 border-light-error-color bg-light-error-background font-semibold text-light-error-color hover:bg-light-error-color hover:text-dark-error-background disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-error-color dark:bg-dark-error-background dark:text-dark-error-color dark:hover:bg-dark-error-color"
 				>
-					{!isSubscribed && categorizedRanges.length >= 1 && <FaCrown className="inline mr-2" />} Add as Leave 
+					Add as Leave
 				</button>
 				<button
 					onClick={() => handleCategoryAdd("OD")}
@@ -282,12 +271,11 @@ export function LeaveODRangeCalendar({
 						!dateRange.from ||
 						!dateRange.to ||
 						dateRange.from > today ||
-						dateRange.to > today ||
-						!isSubscribed
+						dateRange.to > today
 					}
 					className="flex-1 rounded-lg py-2 border-light-success-color bg-light-success-background font-semibold text-light-success-color hover:bg-light-success-color hover:text-dark-success-background disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-success-color dark:bg-dark-success-background dark:text-dark-success-color dark:hover:bg-dark-success-color flex items-center justify-center gap-2"
 				>
-					{!isSubscribed && <FaCrown className="inline" />} Add as OD/ML 
+					Add as OD/ML
 				</button>
 			</div>
 		</div>
