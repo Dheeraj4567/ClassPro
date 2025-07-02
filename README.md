@@ -1,6 +1,6 @@
 ![alt text](frontend/public/images/og.png)
 
-# ClassPro Monorepo
+# ClassPro
 
 ## Better way to manage your academics.
 
@@ -35,7 +35,7 @@ classpro/
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/rahuletto/classpro
+   git clone --recurse-submodules https://github.com/rahuletto/classpro
    cd classpro
    ```
 
