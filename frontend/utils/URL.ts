@@ -1,7 +1,6 @@
 const serverUrls = [process.env.NEXT_PUBLIC_URL];
 
 export const revalUrl = serverUrls[0];
-export const filesUrl = process.env.NEXT_PUBLIC_FILES_URL;
 
 export default function rotateUrl(): string {
 	const timestamp = Date.now();

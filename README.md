@@ -1,36 +1,137 @@
-![alt text](/public/images/og.png)
+![alt text](frontend/public/images/og.png)
 
+# ClassPro Monorepo
 
-# ClassPro
 ## Better way to manage your academics.
+
 View, predict, and strategize your success.
+
+This monorepo contains both the frontend (Next.js) and backend (Go) for the ClassPro application.
 
 ---
 
-> [!TIP]
-> ClassPro is now self-hostable! You can run your very own ClassPro instance.
-> - `NEXT_PUBLIC_URL` is the [backend](https://github.com/rahuletto/goscraper) that you have to deploy it by yourself and link it
-> - `NEXT_PUBLIC_VALIDATION_KEY` should be an unique key that should match with the backend server.. This key is used to validate if the requests are authentic and from desired frontend
-> - `NEXT_PUBLIC_SERVICE_KEY` and `NEXT_PUBLIC_SUPABASE_URL` should be your supabase SERVICE key and ANON key.
->
-> Host it, get the url, use it and enjoy! 
+## Monorepo Structure
 
-### `.env`
 ```
-NEXT_PUBLIC_URL=""
-NEXT_PUBLIC_VALIDATION_KEY=""
-NEXT_PUBLIC_SERVICE_KEY=""
-NEXT_PUBLIC_SUPABASE_URL=""
+classpro/
+├── frontend/          # Next.js frontend application
+├── backend/           # Go backend API
+├── .env.example       # Environment variables template
+├── package.json
+├── compose.yaml
+└── README.md
 ```
+
+## Quick Start
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (>=1.1.0)
+- [Go](https://golang.org/) (>=1.23.0)
+- [Docker](https://docker.com/) (optional, for containerized deployment)
+
+### Setup
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/rahuletto/classpro
+   cd classpro
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   # Install the run script
+   bun install
+
+   # Install all dependencies
+   bun run install:all
+   ```
+
+3. **Environment Setup:**
+Copy from `.env.example` and paste it in the root directory
+
+```bash
+# Shared Configuration
+SUPABASE_URL="your_supabase_url"
+SUPABASE_KEY="your_supabase_anon_key"
+VALIDATION_KEY="your_validation_key"
+
+# Frontend Specific (Mostly autofilled by the variables)
+NEXT_PUBLIC_URL="http://localhost:8080"
+NEXT_PUBLIC_SUPABASE_URL="${SUPABASE_URL}"
+NEXT_PUBLIC_SERVICE_KEY="${SUPABASE_KEY}"
+NEXT_PUBLIC_VALIDATION_KEY="${VALIDATION_KEY}"
+
+# Backend Specific
+ENCRYPTION_KEY="your_encryption_key"
+CORS_URLS="http://localhost:3000,http://localhost:0243"
+```
+
+
+> [!TIP]
+> Generate secure keys for `VALIDATION_KEY` and `ENCRYPTION_KEY`.
+>
+> **For Linux, macOS, or Windows with Git Bash/WSL:**
+>
+> ```bash
+> openssl rand -hex 32
+> ```
+>
+> **For Windows with PowerShell:**
+>
+> ```powershell
+> [BitConverter]::ToString((New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes(32)).Replace("-", "").ToLower()
+> ```
+
+### Development
+
+#### Run both services:
+
+```bash
+# Frontend (http://localhost:0243)
+bun run dev:frontend
+
+# Backend (http://localhost:8080)
+bun run dev:backend
+
+# Run the app as a whole
+bun run dev
+```
+
+### Production Build
+
+```bash
+# Build both services as a whole
+bun run build
+
+# Build individually
+bun run build:frontend
+bun run build:backend
+```
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+bun run docker:build
+bun run docker:up
+
+# Stop services
+bun run docker:down
+```
+
 
 > [!WARNING]
 > We will **NOT** take account for anything caused by your self-hosted instance
 
+
 ## Why Choose ClassPro?
 
-- **Mobile-First Approach:** Optimized for mobile devices.
-- **Fast and RAM Friendly:** Quick and efficient, won't slow down your device.
+- **Mobile-First Approach:** Built for mobile devices, Optimized for desktop and tablet devices.
 - **Open Source:** Transparent and community-driven.
+- **Massive Community**: Used by 16k+ students every month.
 - **Timetable Generation:** Creates a full timetable based on your class schedule.
 - **Attendance Prediction:** Predicts the percent based on your expected leave days
 - **Safe and Secure:** Built with privacy and security in mind.
@@ -39,7 +140,6 @@ NEXT_PUBLIC_SUPABASE_URL=""
 ### The Idea Behind ClassPro
 
 This project was intended to show the timetable and attendance. but it grew and scaled to a full-on replacement to SRM Academia. We made sure to use the web-standards and the best-in-class approaches to make sure our service is `fast`, `easy-to-use` and `easy on eyes`.
-
 
 ## Contributors
 
