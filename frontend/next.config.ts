@@ -38,7 +38,6 @@ const nextConfig: NextConfig = {
 		reactCompiler: true,
 		nextScriptWorkers: true,
 		viewTransition: true,
-		ppr: 'incremental',
 		staticGenerationMaxConcurrency: 8,
 	},
 	async headers() {
