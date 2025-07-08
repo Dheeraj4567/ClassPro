@@ -5,8 +5,9 @@ import { Link } from "next-view-transitions";
 export default function MiniButtons({
 	icon,
 	...props
-}: ComponentProps<typeof NextLink> & {
+}: Omit<ComponentProps<typeof NextLink>, 'prefetch'> & {
 	icon: ReactNode;
+	prefetch?: boolean | null;
 }) {
 	return (
 		<Link

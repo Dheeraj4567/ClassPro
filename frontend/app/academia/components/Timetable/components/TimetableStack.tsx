@@ -16,7 +16,7 @@ export default function TimetableStack({
 }: {
 	schedule: Schedule[];
 	today: Day;
-		tomorrow: Day;
+	tomorrow: Day;
 	ophours: string[];
 }) {
 	const [dOrder, setDo] = useState<string>(
@@ -91,7 +91,7 @@ export default function TimetableStack({
 						>
 							{scheduleToday?.table?.slice(0, 5).map((item, index) => (
 								<TableCell
-									isClassGoing={isClassGoing && today.dayOrder === dOrder}
+									isClassGoing={isClassGoing && today?.dayOrder === dOrder}
 									key={index}
 									cell={item}
 									index={index}
@@ -105,7 +105,7 @@ export default function TimetableStack({
 						>
 							{scheduleToday?.table?.slice(5, 10).map((item, index) => (
 								<TableCell
-									isClassGoing={isClassGoing && today.dayOrder === dOrder}
+									isClassGoing={isClassGoing && today?.dayOrder === dOrder}
 									key={index}
 									cell={item}
 									index={index}
@@ -139,17 +139,17 @@ export default function TimetableStack({
 				</div>
 				<button
 					type="button"
-					onClick={() => setDo(today.dayOrder === "-" ? "0" : today.dayOrder)}
-					className={`rounded-full px-4 py-1 font-medium text-sm border border-dashed ${dOrder === (today.dayOrder === "-" ? "0" : today.dayOrder) ? "dark:bg-dark-success-background bg-light-success-background border-transparent text-light-success-color dark:text-dark-success-color" : "dark:bg-dark-color/5 bg-light-color/5 dark:border-dark-color/10 border-light-color/10 dark:text-dark-color text-light-color"} `}
+					onClick={() => setDo(today?.dayOrder === "-" ? "0" : today?.dayOrder)}
+					className={`rounded-full px-4 py-1 font-medium text-sm border border-dashed ${dOrder === (today?.dayOrder === "-" ? "0" : today?.dayOrder) ? "dark:bg-dark-success-background bg-light-success-background border-transparent text-light-success-color dark:text-dark-success-color" : "dark:bg-dark-color/5 bg-light-color/5 dark:border-dark-color/10 border-light-color/10 dark:text-dark-color text-light-color"} `}
 				>
 					Today
 				</button>
-				{currentTime && currentTime.getHours() >= 17 && Number(tomorrow.dayOrder) > 0 && <button
+				{currentTime && currentTime.getHours() >= 17 && Number(tomorrow?.dayOrder) > 0 && <button
 					type="button"
-					onClick={() => setDo(tomorrow.dayOrder)}
+					onClick={() => setDo(tomorrow?.dayOrder)}
 					className={`rounded-full px-4 py-1 font-medium text-sm border border-dashed dark:bg-dark-info-background bg-light-info-background border-light-info-color dark:border-dark-info-color text-light-info-color dark:text-dark-info-color `}
 				>
-					Tom: DO{Number(tomorrow.dayOrder)}
+					Tom: DO{Number(tomorrow?.dayOrder)}
 				</button>}
 			</div>
 		</>

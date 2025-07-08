@@ -1,4 +1,4 @@
-import React, { type ComponentProps } from "react";
+import React, { type ComponentProps, type ReactNode } from "react";
 import { Link as Alink } from "next-view-transitions";
 import type NextLink from "next/link";
 import { usePathname } from "next/navigation";
@@ -6,7 +6,11 @@ import { usePathname } from "next/navigation";
 export default function SidebarLink({
 	children,
 	...props
-}: ComponentProps<typeof NextLink>) {
+}: Omit<ComponentProps<typeof NextLink>, 'prefetch'> & {
+	children?: ReactNode;
+	prefetch?: boolean | null;
+}) {
+	
 	const pathname = usePathname();
 	return (
 		<Alink

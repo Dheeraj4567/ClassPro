@@ -16,7 +16,7 @@
     },
     "frontend": {
       "name": "classpro-frontend",
-      "version": "3.0.0",
+      "version": "3.1.2",
       "dependencies": {
         "@dotmind/react-use-pwa": "^1.0.4",
         "@radix-ui/react-popover": "^1.1.5",

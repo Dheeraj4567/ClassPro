@@ -33,7 +33,7 @@ export default function Timetable({
 				</div>
 			</div>
 			<div className={"transition duration-150"}>
-				<TimetableStack schedule={schedule} ophours={ophours} today={today} tomorrow={tomorrow} />
+				{today || tomorrow ? <TimetableStack schedule={schedule} ophours={ophours} today={today} tomorrow={tomorrow} /> : <div className="text-center text-lg font-semibold">No timetable available</div>}
 				<div id="edit-timetable" />
 			</div>
 		</section>
