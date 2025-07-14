@@ -13,8 +13,6 @@ if (!SUPABASE_KEY) {
 	console.error("NEXT_PUBLIC_SERVICE_KEY is not defined");
 }
 
-console.log("Environment variables available:", Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')));
-
 
 // Create a Supabase client instance
 const supabase = createClient(SUPABASE_URL ?? "", SUPABASE_KEY ?? "");
