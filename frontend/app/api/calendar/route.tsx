@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 						tw="my-8 flex items-baseline min-w-[220px] justify-start ml-48 w-full"
 					>
 						<h1 tw="font-semibold text-[#FFF] mt-3 text-6xl">
-							{months[monthIndex]}
+							{month.includes("Jul") ? months[monthIndex + 6] : months[monthIndex]}
 						</h1>
 						<p tw="text-3xl text-[#FFF] -mt-2 font-medium md:font-semibold ml-2 opacity-60">
 							20{month.split("'")[1]}

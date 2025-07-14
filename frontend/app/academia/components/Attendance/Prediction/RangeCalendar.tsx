@@ -10,7 +10,6 @@ import { Calendar as CalendarComp } from "@/components/ui/calendar";
 import type { CategorizedDateRange } from "@/types/Attendance";
 import type { Calendar as CalendarType } from "@/types/Calendar";
 import { months } from "..";
-import { FaCrown } from "react-icons/fa6";
 
 type DateCategory = "Leave" | "OD";
 

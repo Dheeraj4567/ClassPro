@@ -25,12 +25,10 @@ const months = [
 export default function CalendarGrid({
 	calendar,
 	isDownload,
-	freesub,
 	index,
 }: {
 	calendar: Calendar[];
 	isDownload: boolean;
-	freesub: boolean;
 	index: number;
 }) {
 	
@@ -83,7 +81,7 @@ export default function CalendarGrid({
 							className="cursor-pointer flex items-end min-w-[150px] md:min-w-[220px]  w-fit justify-start gap-2"
 						>
 							<h1 className="font-semibold text-2xl md:text-4xl">
-								{months[month]}
+								{calendar[0].month.includes("Jul") ? months[month + 6] : months[month]}
 							</h1>
 							<p className="text-md font-medium md:font-semibold opacity-60">
 								20{calendar[calendar.length - 1].month.split("'")[1]}
@@ -104,7 +102,7 @@ export default function CalendarGrid({
 					</div>
 					<a
 						href={`/api/calendar?month=${month}`}
-						download={`${months[month]}-ClassPro.png`}
+						download={`${calendar[0].month.includes("Jul") ? months[month + 6] : months[month]}-ClassPro.png`}
 						className="p-1 rounded-lg transition-all duration-150 hover:bg-light-button dark:hover:bg-dark-button"
 					>
 						<FiDownload className="text-lg text-light-accent dark:text-dark-accent cursor-pointer" />
