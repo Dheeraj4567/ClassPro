@@ -66,7 +66,7 @@ NEXT_PUBLIC_VALIDATION_KEY="${VALIDATION_KEY}"
 
 # Backend Specific
 ENCRYPTION_KEY="your_encryption_key"
-CORS_URLS="http://localhost:3000,http://localhost:0243"
+URL="http://localhost:3000,http://localhost:0243"
 ```
 
 

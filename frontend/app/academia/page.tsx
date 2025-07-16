@@ -7,6 +7,8 @@ export default async function Academia() {
 	const json = await fetchUserData();
 	const cal = await fetchCalendar();
 
+	console.log(json,cal)
+
 	return (
 		<>
 			<ClientAcademia json={json} cal={cal} />
