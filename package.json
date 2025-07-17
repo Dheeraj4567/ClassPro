@@ -4,8 +4,7 @@
   "private": true,
   "packageManager": "bun@1.1.38",
   "workspaces": [
-    "frontend",
-    "backend"
+    "frontend"
   ],
   "scripts": {
     "dev": "bun run sync:env && concurrently \"bun run dev:frontend\" \"bun run dev:backend\"",

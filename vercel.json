@@ -1,7 +1,7 @@
 {
 	"buildCommand": "cd frontend && bun run build",
 	"outputDirectory": "frontend/.next",
-	"installCommand": "bun install",
+	"installCommand": "cd frontend && bun install",
 	"regions": ["bom1"],
 	"cleanUrls": true,
 	"framework": "nextjs",

@@ -10,10 +10,6 @@
         "rimraf": "^5.0.7",
       },
     },
-    "backend": {
-      "name": "classpro-backend",
-      "version": "3.0.0",
-    },
     "frontend": {
       "name": "classpro-frontend",
       "version": "3.1.2",
@@ -474,8 +470,6 @@
     "chardet": ["chardet@0.7.0", "", {}, "sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA=="],
 
     "chownr": ["chownr@3.0.0", "", {}, "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g=="],
-
-    "classpro-backend": ["classpro-backend@workspace:backend"],
 
     "classpro-frontend": ["classpro-frontend@workspace:frontend"],
 
