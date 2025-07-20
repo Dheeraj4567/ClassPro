@@ -1,32 +1,30 @@
 ![alt text](frontend/public/images/og.png)
 
 # ClassPro
-
-## Better way to manage your academics.
+### Better way to manage your academics.
 
 View, predict, and strategize your success.
 
-This monorepo contains both the frontend (Next.js) and backend (Go) for the ClassPro application.
+> This monorepo contains both the frontend (Next.js) and backend (Go) for the ClassPro application.
+> 
+> ---
+> 
+> ## Monorepo Structure
+> 
+> ```
+> classpro/
+> ├── frontend/          # Next.js frontend application
+> ├── backend/           # Go backend API
+> ├── .env.example       # Environment variables template
+> ├── package.json
+> ├── compose.yaml
+> └── README.md
+> ```
 
----
-
-## Monorepo Structure
-
-```
-classpro/
-├── frontend/          # Next.js frontend application
-├── backend/           # Go backend API
-├── .env.example       # Environment variables template
-├── package.json
-├── compose.yaml
-└── README.md
-```
-
-## Quick Start
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) (>=1.1.0)
+- [Bun](https://bun.sh/) (>=1.2.0)
 - [Go](https://golang.org/) (>=1.23.0)
 - [Docker](https://docker.com/) (optional, for containerized deployment)
 
