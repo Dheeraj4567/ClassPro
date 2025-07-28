@@ -177,9 +177,23 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 
 	var today, tomorrow *types.Day
 	if len(monthEntry.Days) > 0 {
+		// For college schedules, if it's early morning (before 6 AM), 
+		// use previous day's schedule as "today"
+		currentTime := c.date
+		todayDay := currentTime.Day()
+		
+		// If it's between 12 AM and 6 AM, use previous day
+		if currentTime.Hour() >= 0 && currentTime.Hour() < 6 {
+			todayDay = todayDay - 1
+			if todayDay <= 0 {
+				// Handle month boundary - go to previous month
+				currentTime = currentTime.AddDate(0, -1, 0)
+				todayDay = currentTime.Day()
+			}
+		}
+		
 		// Find today's entry by matching the actual date string
 		// Try both zero-padded and non-zero-padded formats
-		todayDay := c.date.Day()
 		todayDateStr := fmt.Sprintf("%d", todayDay)
 		todayDateStrPadded := fmt.Sprintf("%02d", todayDay)
 		var todayIndex = -1
@@ -190,16 +204,18 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 				today = &monthEntry.Days[i]
 				todayIndex = i
 				// Debug: log what we found
-				fmt.Printf("DEBUG: Found today - IST Date: %d/%d/%d, Calendar Date: %s, Day Order: %s, Month: %s\n", 
-					c.date.Day(), int(c.date.Month()), c.date.Year(), day.Date, day.DayOrder, monthEntry.Month)
+				fmt.Printf("DEBUG: Found today - Using Day: %d, Calendar Date: %s, Day Order: %s, Month: %s, Hour: %d\n", 
+					todayDay, day.Date, day.DayOrder, monthEntry.Month, currentTime.Hour())
 				break
 			}
 		}
 		
 		// Debug: if not found, log available dates and try alternative approach
 		if todayIndex == -1 {
-			fmt.Printf("DEBUG: Today not found - Looking for %s or %s in month %s\n", todayDateStr, todayDateStrPadded, monthEntry.Month)
-			fmt.Printf("DEBUG: IST time: %s\n", c.date.Format("2006-01-02 15:04:05 MST"))
+			fmt.Printf("DEBUG: Today not found - Looking for adjusted day %d (%s or %s) in month %s\n", 
+				todayDay, todayDateStr, todayDateStrPadded, monthEntry.Month)
+			fmt.Printf("DEBUG: Current IST time: %s (Hour: %d)\n", 
+				currentTime.Format("2006-01-02 15:04:05 MST"), currentTime.Hour())
 			fmt.Printf("DEBUG: Available dates in %s: ", monthEntry.Month)
 			for _, day := range monthEntry.Days {
 				fmt.Printf("'%s'(DO:%s) ", day.Date, day.DayOrder)
