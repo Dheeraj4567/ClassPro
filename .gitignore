@@ -4,6 +4,8 @@
 /node_modules
 frontend/node_modules
 backend/node_modules
+node_modules/
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -13,6 +15,7 @@ backend/node_modules
 !.yarn/versions
 pnpm-lock.yaml
 bun.lockb
+
 # testing
 /coverage
 frontend/coverage
@@ -21,6 +24,12 @@ backend/coverage
 # next.js
 frontend/.next/
 frontend/out/
+.next/
+out/
+
+# next.js build cache
+frontend/.next/cache/
+.next/cache/
 
 # production
 frontend/build
