@@ -189,7 +189,33 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 			if day.Date == todayDateStr || day.Date == todayDateStrPadded {
 				today = &monthEntry.Days[i]
 				todayIndex = i
+				// Debug: log what we found
+				fmt.Printf("DEBUG: Found today - IST Date: %d/%d/%d, Calendar Date: %s, Day Order: %s, Month: %s\n", 
+					c.date.Day(), int(c.date.Month()), c.date.Year(), day.Date, day.DayOrder, monthEntry.Month)
 				break
+			}
+		}
+		
+		// Debug: if not found, log available dates and try alternative approach
+		if todayIndex == -1 {
+			fmt.Printf("DEBUG: Today not found - Looking for %s or %s in month %s\n", todayDateStr, todayDateStrPadded, monthEntry.Month)
+			fmt.Printf("DEBUG: IST time: %s\n", c.date.Format("2006-01-02 15:04:05 MST"))
+			fmt.Printf("DEBUG: Available dates in %s: ", monthEntry.Month)
+			for _, day := range monthEntry.Days {
+				fmt.Printf("'%s'(DO:%s) ", day.Date, day.DayOrder)
+			}
+			fmt.Printf("\n")
+			
+			// Try to find closest date or today-1
+			yesterdayDateStr := fmt.Sprintf("%d", todayDay-1)
+			yesterdayDateStrPadded := fmt.Sprintf("%02d", todayDay-1)
+			for i, day := range monthEntry.Days {
+				if day.Date == yesterdayDateStr || day.Date == yesterdayDateStrPadded {
+					fmt.Printf("DEBUG: Using yesterday as fallback - Date: %s, Day Order: %s\n", day.Date, day.DayOrder)
+					today = &monthEntry.Days[i]
+					todayIndex = i
+					break
+				}
 			}
 		}
 

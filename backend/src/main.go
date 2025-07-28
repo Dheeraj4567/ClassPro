@@ -87,7 +87,7 @@ func main() {
 
 	app.Use(func(c *fiber.Ctx) error {
 		switch c.Path() {
-		case "/login", "/hello":
+		case "/login", "/hello", "/health":
 			return c.Next()
 		}
 
@@ -102,7 +102,7 @@ func main() {
 
 	app.Use(func(c *fiber.Ctx) error {
 		switch c.Path() {
-		case "/hello":
+		case "/hello", "/health":
 			return c.Next()
 		}
 
