@@ -177,58 +177,64 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 
 	var today, tomorrow *types.Day
 	if len(monthEntry.Days) > 0 {
-		// College calendar seems to be offset - use previous day as "today"
 		currentTime := c.date
-		todayDay := currentTime.Day() - 1
+		actualDay := currentTime.Day()
 		
-		// Handle month boundary
-		if todayDay <= 0 {
-			// Go to previous month's last day
-			currentTime = currentTime.AddDate(0, -1, 0)
-			// Get last day of previous month
-			todayDay = currentTime.AddDate(0, 1, -currentTime.Day()).Day()
+		fmt.Printf("EXTENSIVE DEBUG: IST Current Time: %s\n", currentTime.Format("2006-01-02 15:04:05 MST"))
+		fmt.Printf("EXTENSIVE DEBUG: Actual day number: %d\n", actualDay)
+		fmt.Printf("EXTENSIVE DEBUG: Month found: %s\n", monthEntry.Month)
+		fmt.Printf("EXTENSIVE DEBUG: All dates in month: ")
+		for _, day := range monthEntry.Days {
+			fmt.Printf("[Date:'%s' Day:'%s' Event:'%s' DayOrder:'%s'] ", day.Date, day.Day, day.Event, day.DayOrder)
 		}
+		fmt.Printf("\n")
 		
-		// Find today's entry by matching the actual date string
-		// Try both zero-padded and non-zero-padded formats
-		todayDateStr := fmt.Sprintf("%d", todayDay)
-		todayDateStrPadded := fmt.Sprintf("%02d", todayDay)
+		// Try multiple day strategies to find the right one
+		candidates := []int{actualDay, actualDay - 1, actualDay - 2, actualDay + 1}
 		var todayIndex = -1
 		
-		// Search for today's date in the month's days
-		for i, day := range monthEntry.Days {
-			if day.Date == todayDateStr || day.Date == todayDateStrPadded {
-				today = &monthEntry.Days[i]
-				todayIndex = i
-				// Debug: log what we found
-				fmt.Printf("DEBUG: Found today - Using Day: %d (actual IST day: %d), Calendar Date: %s, Day Order: %s, Month: %s\n", 
-					todayDay, c.date.Day(), day.Date, day.DayOrder, monthEntry.Month)
-				break
+		for _, tryDay := range candidates {
+			if tryDay <= 0 {
+				continue // Skip invalid days
+			}
+			
+			tryDateStr := fmt.Sprintf("%d", tryDay)
+			tryDateStrPadded := fmt.Sprintf("%02d", tryDay)
+			
+			fmt.Printf("EXTENSIVE DEBUG: Trying day %d (strings: '%s' or '%s')\n", tryDay, tryDateStr, tryDateStrPadded)
+			
+			for i, day := range monthEntry.Days {
+				if day.Date == tryDateStr || day.Date == tryDateStrPadded {
+					fmt.Printf("EXTENSIVE DEBUG: MATCH! Day %d -> Calendar Date: '%s', Day Order: '%s'\n", tryDay, day.Date, day.DayOrder)
+					today = &monthEntry.Days[i]
+					todayIndex = i
+					
+					// Show which strategy worked
+					if tryDay == actualDay {
+						fmt.Printf("EXTENSIVE DEBUG: SUCCESS using actual day (%d)\n", actualDay)
+					} else if tryDay == actualDay - 1 {
+						fmt.Printf("EXTENSIVE DEBUG: SUCCESS using actual day - 1 (%d)\n", actualDay - 1)
+					} else if tryDay == actualDay - 2 {
+						fmt.Printf("EXTENSIVE DEBUG: SUCCESS using actual day - 2 (%d)\n", actualDay - 2)
+					} else if tryDay == actualDay + 1 {
+						fmt.Printf("EXTENSIVE DEBUG: SUCCESS using actual day + 1 (%d)\n", actualDay + 1)
+					}
+					break
+				}
+			}
+			
+			if todayIndex != -1 {
+				break // Found a match, stop trying
 			}
 		}
 		
-		// Debug: if not found, log available dates and try alternative approach
 		if todayIndex == -1 {
-			fmt.Printf("DEBUG: Today not found - Looking for adjusted day %d (%s or %s) in month %s\n", 
-				todayDay, todayDateStr, todayDateStrPadded, monthEntry.Month)
-			fmt.Printf("DEBUG: Actual IST day: %d, Adjusted day: %d\n", 
-				c.date.Day(), todayDay)
-			fmt.Printf("DEBUG: Available dates in %s: ", monthEntry.Month)
-			for _, day := range monthEntry.Days {
-				fmt.Printf("'%s'(DO:%s) ", day.Date, day.DayOrder)
-			}
-			fmt.Printf("\n")
-			
-			// Try to find closest date or today-1
-			yesterdayDateStr := fmt.Sprintf("%d", todayDay-1)
-			yesterdayDateStrPadded := fmt.Sprintf("%02d", todayDay-1)
-			for i, day := range monthEntry.Days {
-				if day.Date == yesterdayDateStr || day.Date == yesterdayDateStrPadded {
-					fmt.Printf("DEBUG: Using yesterday as fallback - Date: %s, Day Order: %s\n", day.Date, day.DayOrder)
-					today = &monthEntry.Days[i]
-					todayIndex = i
-					break
-				}
+			fmt.Printf("EXTENSIVE DEBUG: NO MATCH FOUND for any candidate days!\n")
+			// Fallback to first available day in month
+			if len(monthEntry.Days) > 0 {
+				today = &monthEntry.Days[0]
+				todayIndex = 0
+				fmt.Printf("EXTENSIVE DEBUG: FALLBACK using first day: Date '%s', Day Order '%s'\n", today.Date, today.DayOrder)
 			}
 		}
 
