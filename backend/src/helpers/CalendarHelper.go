@@ -178,12 +178,15 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 	var today, tomorrow *types.Day
 	if len(monthEntry.Days) > 0 {
 		// Find today's entry by matching the actual date string
-		todayDateStr := fmt.Sprintf("%d", c.date.Day())
+		// Try both zero-padded and non-zero-padded formats
+		todayDay := c.date.Day()
+		todayDateStr := fmt.Sprintf("%d", todayDay)
+		todayDateStrPadded := fmt.Sprintf("%02d", todayDay)
 		var todayIndex = -1
 		
 		// Search for today's date in the month's days
 		for i, day := range monthEntry.Days {
-			if day.Date == todayDateStr {
+			if day.Date == todayDateStr || day.Date == todayDateStrPadded {
 				today = &monthEntry.Days[i]
 				todayIndex = i
 				break

@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 							<div tw="flex w-[285px] h-[370px] border-[#1E232B] border opacity-20" key={`empty-${index}`} />
 						))}
 						{days
-							.filter((a: any) => a.dayOrder.length <= 1)
+							?.filter((a: any) => a && a.date && a.date.trim() !== "")
 							.map((day, index: number) => (
 								<DayCell key={index} day={day} />
 							))}

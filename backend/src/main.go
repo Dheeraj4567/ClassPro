@@ -26,7 +26,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var startTime time.Time
+
 func main() {
+	startTime = time.Now()
+	
 	if globals.DevMode {
 		godotenv.Load()
 	}
@@ -189,6 +193,16 @@ func main() {
 
 	app.Get("/hello", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"message": "Hello, World!"})
+	})
+
+	// Health check endpoint for monitoring services
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status":    "healthy",
+			"timestamp": time.Now().Unix(),
+			"service":   "GoScraper v3.0",
+			"uptime":    time.Since(startTime).String(),
+		})
 	})
 
 	app.Post("/login", func(c *fiber.Ctx) error {
