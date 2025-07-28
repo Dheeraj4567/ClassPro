@@ -138,31 +138,69 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 	// Sort the calendar data
 	sortedData := SortCalendarData(data)
 
-	// Find current month entry
+	// Find current month entry with better logic
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 	currentMonthName := monthNames[c.date.Month()-1]
+	currentYear := fmt.Sprintf("%02d", c.date.Year()%100) // Get last 2 digits of year
 
 	var monthEntry types.CalendarMonth
 	var monthIndex int
+	found := false
+
+	// First try to find current month with year
 	for i, entry := range sortedData {
-		if strings.Contains(entry.Month, currentMonthName) {
+		if strings.Contains(entry.Month, currentMonthName) && strings.Contains(entry.Month, currentYear) {
 			monthEntry = entry
 			monthIndex = i
+			found = true
 			break
 		}
 	}
 
-	if monthEntry.Month == "" {
+	// If not found with year, try just month name
+	if !found {
+		for i, entry := range sortedData {
+			if strings.Contains(entry.Month, currentMonthName) {
+				monthEntry = entry
+				monthIndex = i
+				found = true
+				break
+			}
+		}
+	}
+
+	// Fall back to first available month
+	if !found && len(sortedData) > 0 {
 		monthEntry = sortedData[0]
 		monthIndex = 0
 	}
 
 	var today, tomorrow *types.Day
 	if len(monthEntry.Days) > 0 {
-		todayIndex := c.date.Day() - 1
-		if todayIndex >= 0 && todayIndex < len(monthEntry.Days) {
-			today = &monthEntry.Days[todayIndex]
+		// Find today's entry by matching the actual date string
+		todayDateStr := fmt.Sprintf("%d", c.date.Day())
+		var todayIndex = -1
+		
+		// Debug logging
+		fmt.Printf("DEBUG: Looking for date %s in month %s\n", todayDateStr, monthEntry.Month)
+		fmt.Printf("DEBUG: Available dates in month: ")
+		for _, day := range monthEntry.Days {
+			fmt.Printf("%s ", day.Date)
+		}
+		fmt.Printf("\n")
+		
+		// Search for today's date in the month's days
+		for i, day := range monthEntry.Days {
+			if day.Date == todayDateStr {
+				today = &monthEntry.Days[i]
+				todayIndex = i
+				fmt.Printf("DEBUG: Found today's entry - Date: %s, DayOrder: %s\n", day.Date, day.DayOrder)
+				break
+			}
+		}
 
+		// If today is found, look for tomorrow
+		if todayIndex >= 0 {
 			// Get tomorrow's date
 			tomorrowIndex := todayIndex + 1
 			if tomorrowIndex < len(monthEntry.Days) {
