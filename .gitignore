@@ -68,3 +68,5 @@ backend/bin/
 # Go workspace files
 go.work
 go.work.sum
+node_modules
+node_modules

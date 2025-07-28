@@ -101,14 +101,14 @@ func (h *CalendarDatabaseHelper) GetEvents() (types.CalendarResponse, error) {
 	sortedData := helpers.SortCalendarData(response)
 
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
-	
+
 	// Use IST timezone for Indian colleges
 	location, err := time.LoadLocation("Asia/Kolkata")
 	if err != nil {
 		location = time.UTC
 	}
 	date := time.Now().In(location)
-	
+
 	currentMonthName := monthNames[date.Month()-1]
 
 	var monthEntry types.CalendarMonth
@@ -131,7 +131,7 @@ func (h *CalendarDatabaseHelper) GetEvents() (types.CalendarResponse, error) {
 		// Find today's entry by matching the actual date string (using IST timezone)
 		todayDateStr := fmt.Sprintf("%d", date.Day())
 		var todayIndex = -1
-		
+
 		// Search for today's date in the month's days
 		for i, day := range monthEntry.Days {
 			if day.Date == todayDateStr {
