@@ -1,6 +1,7 @@
 package databases
 
 import (
+	"fmt"
 	"goscraper/src/globals"
 	"goscraper/src/helpers"
 	"goscraper/src/types"
@@ -100,7 +101,14 @@ func (h *CalendarDatabaseHelper) GetEvents() (types.CalendarResponse, error) {
 	sortedData := helpers.SortCalendarData(response)
 
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
-	date := time.Now()
+	
+	// Use IST timezone for Indian colleges
+	location, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		location = time.UTC
+	}
+	date := time.Now().In(location)
+	
 	currentMonthName := monthNames[date.Month()-1]
 
 	var monthEntry types.CalendarMonth
@@ -120,10 +128,21 @@ func (h *CalendarDatabaseHelper) GetEvents() (types.CalendarResponse, error) {
 
 	var today, tomorrow *types.Day
 	if len(monthEntry.Days) > 0 {
-		todayIndex := time.Now().Day() - 1
-		if todayIndex >= 0 && todayIndex < len(monthEntry.Days) {
-			today = &monthEntry.Days[todayIndex]
+		// Find today's entry by matching the actual date string (using IST timezone)
+		todayDateStr := fmt.Sprintf("%d", date.Day())
+		var todayIndex = -1
+		
+		// Search for today's date in the month's days
+		for i, day := range monthEntry.Days {
+			if day.Date == todayDateStr {
+				today = &monthEntry.Days[i]
+				todayIndex = i
+				break
+			}
+		}
 
+		// If today is found, look for tomorrow
+		if todayIndex >= 0 {
 			// Get tomorrow's date
 			tomorrowIndex := todayIndex + 1
 			if tomorrowIndex < len(monthEntry.Days) {

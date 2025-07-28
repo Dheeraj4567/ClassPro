@@ -7,9 +7,16 @@ import (
 )
 
 func GetCalendar(token string) (*types.CalendarResponse, error) {
-	scraper := helpers.NewCalendarFetcher(time.Now(), token)
+	// Use IST timezone for Indian colleges
+	location, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		// Fallback to UTC if IST loading fails
+		location = time.UTC
+	}
+	
+	now := time.Now().In(location)
+	scraper := helpers.NewCalendarFetcher(now, token)
 	calendar, err := scraper.GetCalendar()
 
 	return calendar, err
-
 }

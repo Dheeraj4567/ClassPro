@@ -181,20 +181,11 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 		todayDateStr := fmt.Sprintf("%d", c.date.Day())
 		var todayIndex = -1
 		
-		// Debug logging
-		fmt.Printf("DEBUG: Looking for date %s in month %s\n", todayDateStr, monthEntry.Month)
-		fmt.Printf("DEBUG: Available dates in month: ")
-		for _, day := range monthEntry.Days {
-			fmt.Printf("%s ", day.Date)
-		}
-		fmt.Printf("\n")
-		
 		// Search for today's date in the month's days
 		for i, day := range monthEntry.Days {
 			if day.Date == todayDateStr {
 				today = &monthEntry.Days[i]
 				todayIndex = i
-				fmt.Printf("DEBUG: Found today's entry - Date: %s, DayOrder: %s\n", day.Date, day.DayOrder)
 				break
 			}
 		}
