@@ -1,7 +1,7 @@
 {
 	"buildCommand": "bun run build",
 	"outputDirectory": ".next",
-	"installCommand": "bun install --frozen-lockfile",
+	"installCommand": "bun install",
 	"regions": [
 		"bom1"
 	],
