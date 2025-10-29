@@ -1,7 +1,7 @@
 {
-	"buildCommand": "bun run build:frontend",
+	"buildCommand": "cd frontend && bun run build",
 	"outputDirectory": "frontend/.next",
-	"installCommand": "bun run install:frontend",
+	"installCommand": "bun install && (cd frontend && bun install)",
 	"regions": [
 		"bom1"
 	],
